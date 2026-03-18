@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enpal Solar ABS — Live Risk Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#0F1923;--card:#1A2736;--card2:#223344;--border:#2A3A4E;
+  --accent:#00C9A7;--accent2:#4DA8FF;--warn:#FF6B35;--danger:#FF4757;
+  --gold:#FFC312;--text:#D4DEE7;--muted:#7B8FA3;--white:#F0F4F8;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow-x:hidden;}
+
+/* ── HEADER ─────────────────────────────────────────────────── */
+.header{background:linear-gradient(135deg,#0D1520 0%,#162535 100%);border-bottom:1px solid var(--border);padding:18px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-left{display:flex;align-items:center;gap:16px;}
+.logo{font-size:24px;font-weight:800;color:var(--accent);letter-spacing:2px;}
+.logo span{color:var(--accent2);}
+.project-name{font-size:15px;color:var(--muted);font-weight:400;}
+.status-badge{display:flex;align-items:center;gap:8px;background:rgba(0,201,167,.12);border:1px solid rgba(0,201,167,.3);border-radius:20px;padding:6px 16px;font-size:12px;color:var(--accent);font-weight:600;}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+/* ── LAYOUT ─────────────────────────────────────────────────── */
+.wrap{max-width:1400px;margin:0 auto;padding:20px;}
+.grid-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.grid-main{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;margin-bottom:20px;}
+.full{grid-column:1/-1;}
+
+/* ── KPI CARDS ──────────────────────────────────────────────── */
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi.struct::before{background:var(--accent);}
+.kpi.hedge::before{background:var(--accent2);}
+.kpi.amort::before{background:var(--gold);}
+.kpi.credit::before{background:var(--warn);}
+.kpi-tag{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.kpi-val{font-size:28px;font-weight:800;color:var(--white);}
+.kpi-sub{font-size:11px;color:var(--accent);margin-top:2px;}
+.kpi-sub.warn{color:var(--warn);}
+
+/* ── PANELS ─────────────────────────────────────────────────── */
+.panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;position:relative;}
+.panel-title{font-size:15px;font-weight:700;color:var(--white);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.panel-title .icon{font-size:18px;}
+
+/* ── CONTROLS ───────────────────────────────────────────────── */
+.ctrl-group{margin-bottom:16px;}
+.ctrl-label{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px;}
+.ctrl-label .val{color:var(--accent);font-weight:700;font-size:13px;}
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;border-radius:3px;background:var(--card2);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);cursor:pointer;border:2px solid var(--bg);}
+input[type=range].warn-slider::-webkit-slider-thumb{background:var(--warn);}
+input[type=range].danger-slider::-webkit-slider-thumb{background:var(--danger);}
+
+/* ── SCENARIO BUTTONS ───────────────────────────────────────── */
+.scenario-btns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;}
+.sc-btn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:.2s;letter-spacing:.5px;}
+.sc-btn:hover{border-color:var(--accent);color:var(--accent);}
+.sc-btn.active{background:var(--accent);color:var(--bg);border-color:var(--accent);}
+.sc-btn.stress{border-color:var(--warn);}
+.sc-btn.stress.active{background:var(--warn);color:#fff;}
+.sc-btn.severe{border-color:var(--danger);}
+.sc-btn.severe.active{background:var(--danger);color:#fff;}
+
+/* ── WATERFALL ──────────────────────────────────────────────── */
+.wf-step{display:flex;align-items:center;gap:14px;padding:12px 16px;border-radius:10px;margin-bottom:8px;background:var(--card2);border-left:4px solid transparent;transition:.2s;}
+.wf-step:hover{background:#2A3D52;}
+.wf-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--bg);flex-shrink:0;}
+.wf-num.fee{background:var(--muted);}
+.wf-num.hedge{background:var(--accent2);}
+.wf-num.int{background:var(--accent);}
+.wf-num.credit{background:var(--warn);}
+.wf-num.trap{background:var(--gold);}
+.wf-num.profit{background:var(--danger);}
+.wf-info{flex:1;}
+.wf-title{font-size:13px;font-weight:600;color:var(--white);}
+.wf-desc{font-size:11px;color:var(--muted);}
+.wf-amount{font-size:14px;font-weight:700;text-align:right;min-width:80px;}
+.wf-tag{font-size:9px;padding:2px 8px;border-radius:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+
+/* ── STACK BAR ──────────────────────────────────────────────── */
+.stack-vis{margin:16px 0;}
+.stack-bar{display:flex;border-radius:8px;overflow:hidden;height:40px;}
+.stack-seg{display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;transition:width .5s ease;}
+.stack-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ── METRIC ROW ─────────────────────────────────────────────── */
+.metric-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(42,58,78,.5);}
+.metric-row:last-child{border:none;}
+.metric-name{font-size:12px;color:var(--muted);}
+.metric-val{font-size:14px;font-weight:700;}
+.metric-val.green{color:var(--accent);}
+.metric-val.amber{color:var(--gold);}
+.metric-val.red{color:var(--danger);}
+
+/* ── PLAY CONTROLS ──────────────────────────────────────────── */
+.play-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.play-btn{width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+.play-btn:hover{background:var(--accent);color:var(--bg);}
+.play-btn.active{background:var(--accent);color:var(--bg);}
+.month-display{font-size:13px;color:var(--muted);font-weight:600;}
+.month-display span{color:var(--accent);font-size:16px;}
+.speed-sel{background:var(--card2);border:1px solid var(--border);color:var(--text);padding:4px 10px;border-radius:6px;font-size:11px;}
+
+/* ── TOGGLE ─────────────────────────────────────────────────── */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;}
+.toggle-label{font-size:12px;color:var(--muted);}
+.toggle{width:42px;height:22px;background:var(--card2);border-radius:11px;cursor:pointer;position:relative;transition:.2s;border:1px solid var(--border);}
+.toggle.on{background:var(--accent);border-color:var(--accent);}
+.toggle::after{content:'';width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;left:2px;transition:.2s;}
+.toggle.on::after{left:22px;}
+
+/* ── EXPORT ─────────────────────────────────────────────────── */
+.export-btn{background:var(--card2);border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:8px;font-size:11px;cursor:pointer;transition:.2s;}
+.export-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── RESPONSIVE ─────────────────────────────────────────────── */
+@media(max-width:900px){
+  .grid-top{grid-template-columns:1fr 1fr;}
+  .grid-main,.grid-3{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══════════════════════════════════════════════════ -->
+<div class="header">
+  <div class="header-left">
+    <div class="logo">ENPAL<span>ABS</span></div>
+    <div class="project-name">Project Solar Bullet €100M — Institutional Waterfall & Risk Engine</div>
+  </div>
+  <div class="status-badge"><div class="status-dot"></div>Live Model</div>
+</div>
+
+<div class="wrap">
+
+<!-- ══ KPI ROW ═════════════════════════════════════════════════ -->
+<div class="grid-top">
+  <div class="kpi struct">
+    <div class="kpi-tag">Structure</div>
+    <div class="kpi-val" id="kpiPortfolio">€110M</div>
+    <div class="kpi-sub">Incl. €10M OC Buffer</div>
+  </div>
+  <div class="kpi hedge">
+    <div class="kpi-tag">Hedging</div>
+    <div class="kpi-val">Fixed/Float</div>
+    <div class="kpi-sub">EURIBOR Hedge Active</div>
+  </div>
+  <div class="kpi amort">
+    <div class="kpi-tag">Amortization</div>
+    <div class="kpi-val">60m Bullet</div>
+    <div class="kpi-sub">Soft-Bullet Maturity</div>
+  </div>
+  <div class="kpi credit">
+    <div class="kpi-tag">Credit</div>
+    <div class="kpi-val" id="kpiTrap">4.5%</div>
+    <div class="kpi-sub warn">Cumulative Default Limit</div>
+  </div>
+</div>
+
+<!-- ══ MAIN GRID ═══════════════════════════════════════════════ -->
+<div class="grid-main">
+
+  <!-- LEFT: Controls + Stack + Waterfall -->
+  <div>
+    <!-- Scenario Presets -->
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-title"><span class="icon">🎛️</span> Risk Scenario Controls</div>
+      <div class="scenario-btns">
+        <button class="sc-btn active" onclick="setScenario('base')">📗 Base Case</button>
+        <button class="sc-btn stress" onclick="setScenario('stress')">📙 Mild Stress</button>
+        <button class="sc-btn severe" onclick="setScenario('severe')">📕 Severe Recession</button>
+        <button class="sc-btn" onclick="setScenario('custom')">⚙️ Custom</button>
+      </div>
+
+      <div class="ctrl-group">
+        <div class="ctrl-label">Default Rate (CDR) <span class="val" id="lblDefault">3.5%</span></div>
+        <input type="range" id="slDefault" min="0" max="15" step="0.1" value="3.5" oninput="updateModel()">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Prepayment Rate (CPR) <span class="val" id="lblPrepay">5.0%</span></div>
+        <input type="range" id="slPrepay" min="0" max="20" step="0.5" value="5" oninput="updateModel()">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">EURIBOR Rate <span class="val" id="lblEuribor">2.5%</span></div>
+        <input type="range" id="slEuribor" min="0" max="6" step="0.1" value="2.5" oninput="updateModel()">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">Recovery Rate <span class="val" id="lblRecovery">25%</span></div>
+        <input type="range" id="slRecovery" min="0" max="60" step="1" value="25" oninput="updateModel()">
+      </div>
+      <div class="ctrl-group">
+        <div class="ctrl-label">NRW Concentration <span class="val" id="lblNRW">20.3%</span></div>
+        <input type="range" id="slNRW" min="5" max="40" step="0.5" value="20.3" oninput="updateModel()">
+      </div>
+
+      <!-- Toggles -->
+      <div class="toggle-row">
+        <span class="toggle-label">VPP Safety Net Active</span>
+        <div class="toggle on" id="togVPP" onclick="toggleVPP()"></div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">Cross-Collateralisation</span>
+        <div class="toggle on" id="togCross" onclick="toggleCross()"></div>
+      </div>
+    </div>
+
+    <!-- Capital Stack -->
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-title"><span class="icon">📊</span> Tranche Capital Stack</div>
+      <div class="stack-vis">
+        <div class="stack-bar">
+          <div class="stack-seg" id="segA" style="width:72.7%;background:#4DA8FF;">A: €80M</div>
+          <div class="stack-seg" id="segB" style="width:13.6%;background:#FF6B35;">B: €15M</div>
+          <div class="stack-seg" id="segOC" style="width:9.1%;background:#FFC312;">OC: €10M</div>
+          <div class="stack-seg" id="segE" style="width:4.5%;background:#FF4757;">Eq: €5M</div>
+        </div>
+        <div class="stack-legend">
+          <div class="leg-item"><div class="leg-dot" style="background:#4DA8FF;"></div>Class A Senior (AAA) — Euribor + 1.0%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#FF6B35;"></div>Class B Mezz — Euribor + 3.5%</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#FFC312;"></div>OC Buffer — €10M</div>
+          <div class="leg-item"><div class="leg-dot" style="background:#FF4757;"></div>Equity / First Loss — Residual</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Waterfall -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">💧</span> Priority of Payments (Waterfall Logic)</div>
+      <div id="waterfallSteps"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Charts + Metrics -->
+  <div>
+    <!-- 60-Month Stress Simulator -->
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-title"><span class="icon">📈</span> 60-Month Stress Simulator</div>
+      <div class="play-bar">
+        <button class="play-btn" id="btnPlay" onclick="togglePlay()">▶</button>
+        <button class="play-btn" onclick="resetSim()">↺</button>
+        <div class="month-display">Month: <span id="monthNum">0</span> / 60</div>
+        <select class="speed-sel" id="speedSel" onchange="changeSpeed()">
+          <option value="200">Fast</option>
+          <option value="500" selected>Normal</option>
+          <option value="1000">Slow</option>
+        </select>
+        <div style="flex:1;"></div>
+        <button class="export-btn" onclick="exportCSV()">📥 Export CSV</button>
+      </div>
+      <canvas id="stressChart" height="220"></canvas>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="panel" style="margin-bottom:18px;">
+      <div class="panel-title"><span class="icon">🎯</span> Real-Time Risk Metrics</div>
+      <div class="metric-row"><span class="metric-name">Excess Spread (Annual)</span><span class="metric-val green" id="mExcess">4.0%</span></div>
+      <div class="metric-row"><span class="metric-name">Weighted Avg. Cost of Debt</span><span class="metric-val" id="mWACD" style="color:var(--accent2);">3.62%</span></div>
+      <div class="metric-row"><span class="metric-name">Senior Tranche Coverage Ratio</span><span class="metric-val green" id="mCoverage">1.38x</span></div>
+      <div class="metric-row"><span class="metric-name">Equity Tranche Break-even Default</span><span class="metric-val" id="mBreakEq" style="color:var(--gold);">6.8%</span></div>
+      <div class="metric-row"><span class="metric-name">Mezzanine Break-even Default</span><span class="metric-val" id="mBreakMezz" style="color:var(--warn);">11.2%</span></div>
+      <div class="metric-row"><span class="metric-name">Cash Trap Status</span><span class="metric-val green" id="mTrap">Inactive</span></div>
+      <div class="metric-row"><span class="metric-name">PDL Balance</span><span class="metric-val green" id="mPDL">€0.0M</span></div>
+      <div class="metric-row"><span class="metric-name">VPP Offset Revenue (est.)</span><span class="metric-val" id="mVPP" style="color:var(--accent);">€1.2M/yr</span></div>
+      <div class="metric-row"><span class="metric-name">NRW Concentration Risk</span><span class="metric-val" id="mNRW" style="color:var(--gold);">Medium</span></div>
+      <div class="metric-row"><span class="metric-name">Portfolio VaR (95%, 1yr)</span><span class="metric-val" id="mVaR" style="color:var(--warn);">€3.8M</span></div>
+    </div>
+
+    <!-- Excess Spread Sensitivity Chart -->
+    <div class="panel">
+      <div class="panel-title"><span class="icon">🔥</span> Excess Spread Sensitivity (Default Rate vs. Euribor)</div>
+      <canvas id="heatChart" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM ROW ═════════════════════════════════════════════ -->
+<div class="grid-3">
+  <!-- Regional Concentration -->
+  <div class="panel">
+    <div class="panel-title"><span class="icon">🗺️</span> Regional Concentration</div>
+    <canvas id="regionChart" height="180"></canvas>
+  </div>
+
+  <!-- Monte Carlo VaR Distribution -->
+  <div class="panel">
+    <div class="panel-title"><span class="icon">🎲</span> Monte Carlo Loss Distribution (10K sims)</div>
+    <canvas id="monteChart" height="180"></canvas>
+  </div>
+
+  <!-- Tranche Loss Absorption -->
+  <div class="panel">
+    <div class="panel-title"><span class="icon">🛡️</span> Tranche Loss Absorption Capacity</div>
+    <canvas id="absorbChart" height="180"></canvas>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// MODEL STATE
+// ══════════════════════════════════════════════════════════════════
+const STATE = {
+  portfolio: 110,  // €M including OC
+  classA: 80, classB: 15, oc: 10, equity: 5,
+  customerAPR: 7.5,
+  defaultRate: 3.5,
+  prepayRate: 5.0,
+  euribor: 2.5,
+  recovery: 25,
+  nrw: 20.3,
+  cashTrapTrigger: 4.5,
+  vppActive: true,
+  crossCollat: true,
+  // Derived
+  servicerFee: 0.5,  // % of portfolio p.a.
+};
+
+let playing = false, simMonth = 0, simInterval = null, simSpeed = 500;
+let simData = { months:[], portfolio:[], reserve:[], debt:[], cumDefault:[] };
+
+// Charts
+let stressChart, heatChart, regionChart, monteChart, absorbChart;
+
+// ══════════════════════════════════════════════════════════════════
+// SCENARIOS
+// ══════════════════════════════════════════════════════════════════
+const SCENARIOS = {
+  base:   { defaultRate:3.5, prepayRate:5,  euribor:2.5, recovery:25, nrw:20.3 },
+  stress: { defaultRate:5.5, prepayRate:8,  euribor:3.5, recovery:18, nrw:25   },
+  severe: { defaultRate:8.0, prepayRate:12, euribor:4.5, recovery:10, nrw:30   },
+  custom: null
+};
+
+function setScenario(name){
+  document.querySelectorAll('.sc-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(name==='custom') return;
+  const s = SCENARIOS[name];
+  document.getElementById('slDefault').value = s.defaultRate;
+  document.getElementById('slPrepay').value = s.prepayRate;
+  document.getElementById('slEuribor').value = s.euribor;
+  document.getElementById('slRecovery').value = s.recovery;
+  document.getElementById('slNRW').value = s.nrw;
+  updateModel();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TOGGLES
+// ══════════════════════════════════════════════════════════════════
+function toggleVPP(){ const t=document.getElementById('togVPP'); STATE.vppActive=!STATE.vppActive; t.classList.toggle('on'); updateModel(); }
+function toggleCross(){ const t=document.getElementById('togCross'); STATE.crossCollat=!STATE.crossCollat; t.classList.toggle('on'); updateModel(); }
+
+// ══════════════════════════════════════════════════════════════════
+// UPDATE MODEL
+// ══════════════════════════════════════════════════════════════════
+function updateModel(){
+  // Read sliders
+  STATE.defaultRate = +document.getElementById('slDefault').value;
+  STATE.prepayRate  = +document.getElementById('slPrepay').value;
+  STATE.euribor     = +document.getElementById('slEuribor').value;
+  STATE.recovery    = +document.getElementById('slRecovery').value;
+  STATE.nrw         = +document.getElementById('slNRW').value;
+
+  // Update labels
+  document.getElementById('lblDefault').textContent  = STATE.defaultRate.toFixed(1)+'%';
+  document.getElementById('lblPrepay').textContent   = STATE.prepayRate.toFixed(1)+'%';
+  document.getElementById('lblEuribor').textContent  = STATE.euribor.toFixed(1)+'%';
+  document.getElementById('lblRecovery').textContent = STATE.recovery.toFixed(0)+'%';
+  document.getElementById('lblNRW').textContent      = STATE.nrw.toFixed(1)+'%';
+
+  // Slider styling
+  const sl = document.getElementById('slDefault');
+  sl.className = STATE.defaultRate > 7 ? 'danger-slider' : STATE.defaultRate > 4.5 ? 'warn-slider' : '';
+
+  // Compute derived metrics
+  const seniorCost = STATE.euribor + 1.0;
+  const mezzCost   = STATE.euribor + 3.5;
+  const wacd = (STATE.classA*seniorCost + STATE.classB*mezzCost) / (STATE.classA+STATE.classB);
+  const excessSpread = STATE.customerAPR - wacd;
+  const vppOffset = STATE.vppActive ? 1.2 : 0;
+  const crossOffset = STATE.crossCollat ? 0.8 : 0;
+  const effectiveDefault = Math.max(0, STATE.defaultRate - vppOffset*0.3 - crossOffset*0.2);
+  const netLoss = effectiveDefault * (1 - STATE.recovery/100);
+  const coverageRatio = (STATE.portfolio - STATE.classA) / STATE.classA;
+  const eqBreak = ((STATE.equity + STATE.oc) / STATE.portfolio * 100) / (1 - STATE.recovery/100);
+  const mezzBreak = ((STATE.equity + STATE.oc + STATE.classB) / STATE.portfolio * 100) / (1 - STATE.recovery/100);
+  const trapActive = STATE.defaultRate >= STATE.cashTrapTrigger;
+  const pdl = trapActive ? (STATE.defaultRate - STATE.cashTrapTrigger) * STATE.portfolio / 100 : 0;
+  const nrwRisk = STATE.nrw > 25 ? 'High' : STATE.nrw > 18 ? 'Medium' : 'Low';
+  const var95 = STATE.portfolio * netLoss/100 * 1.65; // simplified parametric VaR
+
+  // Update metrics
+  document.getElementById('mExcess').textContent = excessSpread.toFixed(2)+'%';
+  document.getElementById('mExcess').className = 'metric-val '+(excessSpread>2?'green':excessSpread>0?'amber':'red');
+  document.getElementById('mWACD').textContent = wacd.toFixed(2)+'%';
+  document.getElementById('mCoverage').textContent = coverageRatio.toFixed(2)+'x';
+  document.getElementById('mCoverage').className = 'metric-val '+(coverageRatio>1.2?'green':coverageRatio>1?'amber':'red');
+  document.getElementById('mBreakEq').textContent = eqBreak.toFixed(1)+'%';
+  document.getElementById('mBreakMezz').textContent = mezzBreak.toFixed(1)+'%';
+  document.getElementById('mTrap').textContent = trapActive ? 'ACTIVE' : 'Inactive';
+  document.getElementById('mTrap').className = 'metric-val '+(trapActive?'red':'green');
+  document.getElementById('mPDL').textContent = '€'+pdl.toFixed(1)+'M';
+  document.getElementById('mPDL').className = 'metric-val '+(pdl>0?'red':'green');
+  document.getElementById('mVPP').textContent = STATE.vppActive ? '€1.2M/yr' : 'Disabled';
+  document.getElementById('mNRW').textContent = nrwRisk;
+  document.getElementById('mNRW').className = 'metric-val '+(nrwRisk==='High'?'red':nrwRisk==='Medium'?'amber':'green');
+  document.getElementById('mVaR').textContent = '€'+var95.toFixed(1)+'M';
+
+  document.getElementById('kpiTrap').textContent = STATE.cashTrapTrigger+'%';
+
+  // Update waterfall
+  buildWaterfall(excessSpread, seniorCost, mezzCost, trapActive, pdl);
+  // Update charts
+  updateHeatChart();
+  updateRegionChart();
+  runMonteCarlo();
+  updateAbsorbChart(eqBreak, mezzBreak);
+  // Re-simulate if not playing
+  if(!playing) runSim60();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// WATERFALL
+// ══════════════════════════════════════════════════════════════════
+function buildWaterfall(excess, seniorCost, mezzCost, trapActive, pdl){
+  const annualIncome = STATE.portfolio * STATE.customerAPR / 100;
+  const servicerFee = STATE.portfolio * STATE.servicerFee / 100;
+  const swapCost = STATE.portfolio * Math.max(0, STATE.euribor - 2.5) / 100 * 0.3;
+  const seniorInt = STATE.classA * seniorCost / 100;
+  const mezzInt = STATE.classB * mezzCost / 100;
+  const pdlCure = Math.min(pdl, annualIncome * 0.1);
+  const trapAmt = trapActive ? annualIncome * 0.05 : 0;
+  const residual = Math.max(0, annualIncome - servicerFee - swapCost - seniorInt - mezzInt - pdlCure - trapAmt);
+
+  const steps = [
+    { num:'fee',    n:1, title:'Senior Expenses', desc:'Trustee, Audit & Servicer Fees', amount:servicerFee, tag:'Fee', tagCol:'var(--muted)' },
+    { num:'hedge',  n:2, title:'Net Swap Settlement', desc:'Floating to Fixed translation', amount:swapCost, tag:'Hedge', tagCol:'var(--accent2)' },
+    { num:'int',    n:3, title:'Class A & B Interest', desc:'Periodic coupons to investors', amount:seniorInt+mezzInt, tag:'Interest', tagCol:'var(--accent)' },
+    { num:'credit', n:4, title:'PDL Cure (Principal Deficiency)', desc:'Recovering value from defaulted loans', amount:pdlCure, tag:'Credit', tagCol:'var(--warn)' },
+    { num:'trap',   n:5, title:'Cash Trap '+(trapActive?'(ACTIVE)':'(Trigger Dependent)'), desc:trapActive?'Building cash reserve!':'Savings for Year 5 Bullet', amount:trapAmt, tag:'Trap', tagCol:'var(--gold)' },
+    { num:'profit', n:6, title:'Equity Distribution', desc:'Residual profit to Enpal', amount:residual, tag:'Profit', tagCol:'var(--danger)' },
+  ];
+
+  const html = steps.map(s => `
+    <div class="wf-step" style="border-left-color:${s.tagCol};">
+      <div class="wf-num ${s.num}">${s.n}</div>
+      <div class="wf-info"><div class="wf-title">${s.title}</div><div class="wf-desc">${s.desc}</div></div>
+      <div style="text-align:right;">
+        <div class="wf-amount" style="color:${s.tagCol};">€${s.amount.toFixed(2)}M</div>
+        <span class="wf-tag" style="background:${s.tagCol};color:#fff;">${s.tag}</span>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('waterfallSteps').innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// 60-MONTH SIMULATOR
+// ══════════════════════════════════════════════════════════════════
+function runSim60(){
+  simData = { months:[], portfolio:[], reserve:[], debt:[], cumDefault:[] };
+  let port = STATE.portfolio;
+  let reserve = 0;
+  let cumDef = 0;
+  const monthlyDefault = STATE.defaultRate / 100 / 12;
+  const monthlyPrepay = STATE.prepayRate / 100 / 12;
+  const debtTarget = STATE.classA + STATE.classB;
+  const vppMonthly = STATE.vppActive ? 0.1 : 0;
+
+  for(let m=0; m<=60; m++){
+    simData.months.push(m);
+    simData.portfolio.push(port);
+    simData.reserve.push(reserve);
+    simData.debt.push(debtTarget);
+    simData.cumDefault.push(cumDef*100);
+
+    const defaults = port * monthlyDefault;
+    const recovered = defaults * STATE.recovery / 100;
+    const prepay = port * monthlyPrepay;
+    cumDef += defaults / STATE.portfolio;
+    port = port - defaults - prepay + recovered + vppMonthly;
+    port = Math.max(port, 0);
+
+    if(cumDef * 100 >= STATE.cashTrapTrigger){
+      const excess = port * (STATE.customerAPR - STATE.euribor - 1) / 100 / 12 * 0.3;
+      reserve += Math.max(0, excess);
+    }
+  }
+  renderStressChart();
+}
+
+function renderStressChart(){
+  const d = simData;
+  if(stressChart) stressChart.destroy();
+  stressChart = new Chart(document.getElementById('stressChart'),{
+    type:'line',
+    data:{
+      labels: d.months,
+      datasets:[
+        { label:'Portfolio Value (€M)', data:d.portfolio, borderColor:'#4DA8FF', backgroundColor:'rgba(77,168,255,.1)', fill:true, tension:.3, borderWidth:2, pointRadius:0 },
+        { label:'Reserve Account (€M)', data:d.reserve, borderColor:'#FF6B35', backgroundColor:'rgba(255,107,53,.1)', fill:true, tension:.3, borderWidth:2, pointRadius:0 },
+        { label:'Debt Target (€M)', data:d.debt, borderColor:'#7B8FA3', borderDash:[6,4], borderWidth:1.5, pointRadius:0, fill:false },
+      ]
+    },
+    options:{
+      responsive:true,
+      animation:{duration:400},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#7B8FA3',font:{size:11},padding:14}},
+        tooltip:{
+          backgroundColor:'#1A2736',borderColor:'#2A3A4E',borderWidth:1,
+          callbacks:{label:ctx=>' '+ctx.dataset.label+': €'+ctx.raw.toFixed(1)+'M'}
+        }
+      },
+      scales:{
+        x:{title:{display:true,text:'Month',color:'#7B8FA3'},grid:{color:'rgba(42,58,78,.3)'},ticks:{color:'#7B8FA3',maxTicksLimit:13}},
+        y:{title:{display:true,text:'€ Million',color:'#7B8FA3'},grid:{color:'rgba(42,58,78,.3)'},ticks:{color:'#7B8FA3'}}
+      }
+    }
+  });
+}
+
+// ── PLAY / PAUSE / RESET ─────────────────────────────────────
+function togglePlay(){
+  if(playing){ pauseSim(); } else { playSim(); }
+}
+function playSim(){
+  playing=true;
+  document.getElementById('btnPlay').textContent='⏸';
+  document.getElementById('btnPlay').classList.add('active');
+  if(simMonth>=60) simMonth=0;
+  simInterval = setInterval(()=>{
+    if(simMonth>=60){ pauseSim(); return; }
+    simMonth++;
+    document.getElementById('monthNum').textContent = simMonth;
+    // Animate chart by showing data up to simMonth
+    const partial = {
+      months: simData.months.slice(0,simMonth+1),
+      portfolio: simData.portfolio.slice(0,simMonth+1),
+      reserve: simData.reserve.slice(0,simMonth+1),
+      debt: simData.debt.slice(0,simMonth+1),
+    };
+    stressChart.data.labels = partial.months;
+    stressChart.data.datasets[0].data = partial.portfolio;
+    stressChart.data.datasets[1].data = partial.reserve;
+    stressChart.data.datasets[2].data = partial.debt;
+    stressChart.update('none');
+  }, simSpeed);
+}
+function pauseSim(){ playing=false; clearInterval(simInterval); document.getElementById('btnPlay').textContent='▶'; document.getElementById('btnPlay').classList.remove('active'); }
+function resetSim(){ pauseSim(); simMonth=0; document.getElementById('monthNum').textContent='0'; runSim60(); }
+function changeSpeed(){ simSpeed = +document.getElementById('speedSel').value; if(playing){ pauseSim(); playSim(); } }
+
+// ══════════════════════════════════════════════════════════════════
+// HEAT MAP — Excess Spread Sensitivity
+// ══════════════════════════════════════════════════════════════════
+function updateHeatChart(){
+  const defaults = [1,2,3,4,5,6,7,8,9,10];
+  const euribors = [1.5,2.0,2.5,3.0,3.5,4.0];
+  const spreads = [];
+  euribors.forEach(e=>{
+    const row = [];
+    defaults.forEach(d=>{
+      const wacd = (STATE.classA*(e+1) + STATE.classB*(e+3.5))/(STATE.classA+STATE.classB);
+      const netLoss = d * (1-STATE.recovery/100);
+      const spread = STATE.customerAPR - wacd - netLoss;
+      row.push(spread);
+    });
+    spreads.push(row);
+  });
+
+  // Use bar chart as proxy heatmap - grouped
+  if(heatChart) heatChart.destroy();
+  const colors = ['#00C9A7','#4DA8FF','#FFC312','#FF6B35','#FF4757','#C44569'];
+  heatChart = new Chart(document.getElementById('heatChart'),{
+    type:'bar',
+    data:{
+      labels: defaults.map(d=>d+'%'),
+      datasets: euribors.map((e,i)=>({
+        label:'Euribor '+e+'%',
+        data: spreads[i],
+        backgroundColor: colors[i]+'99',
+        borderColor: colors[i],
+        borderWidth:1,
+        borderRadius:3,
+      }))
+    },
+    options:{
+      responsive:true,
+      animation:{duration:300},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#7B8FA3',font:{size:10},padding:10}},
+        tooltip:{callbacks:{label:ctx=>' Euribor '+euribors[ctx.datasetIndex]+'%: Spread = '+ctx.raw.toFixed(2)+'%'}}
+      },
+      scales:{
+        x:{title:{display:true,text:'Default Rate',color:'#7B8FA3'},grid:{display:false},ticks:{color:'#7B8FA3'}},
+        y:{title:{display:true,text:'Excess Spread %',color:'#7B8FA3'},grid:{color:'rgba(42,58,78,.3)'},ticks:{color:'#7B8FA3'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// REGIONAL CONCENTRATION
+// ══════════════════════════════════════════════════════════════════
+function updateRegionChart(){
+  const nrw = STATE.nrw;
+  const rest = [
+    {name:'Bavaria',val:14.2},{name:'Baden-Württemberg',val:12.8},{name:'Lower Saxony',val:10.5},
+    {name:'Hesse',val:9.1},{name:'Berlin/Brandenburg',val:8.4},{name:'Others',val:100-nrw-14.2-12.8-10.5-9.1-8.4}
+  ];
+  const labels = ['NRW',...rest.map(r=>r.name)];
+  const data = [nrw,...rest.map(r=>r.val)];
+  const bg = ['#FF4757','#4DA8FF','#00C9A7','#FFC312','#FF6B35','#7B8FA3','#C44569'];
+
+  if(regionChart) regionChart.destroy();
+  regionChart = new Chart(document.getElementById('regionChart'),{
+    type:'doughnut',
+    data:{ labels, datasets:[{data, backgroundColor:bg, borderWidth:2, borderColor:'#1A2736', hoverOffset:6}] },
+    options:{
+      responsive:true,
+      cutout:'55%',
+      plugins:{
+        legend:{position:'right',labels:{color:'#7B8FA3',font:{size:10},padding:8}},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.label+': '+ctx.raw.toFixed(1)+'%'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MONTE CARLO SIMULATION
+// ══════════════════════════════════════════════════════════════════
+function runMonteCarlo(){
+  const N = 10000;
+  const losses = [];
+  const mu = STATE.defaultRate/100 * (1-STATE.recovery/100) * STATE.portfolio;
+  const sigma = mu * 0.4;
+  for(let i=0;i<N;i++){
+    // Box-Muller transform
+    const u1=Math.random(), u2=Math.random();
+    const z = Math.sqrt(-2*Math.log(u1))*Math.cos(2*Math.PI*u2);
+    losses.push(Math.max(0, mu + sigma*z));
+  }
+  losses.sort((a,b)=>a-b);
+
+  // Histogram
+  const bins=30;
+  const maxL = losses[Math.floor(N*0.99)];
+  const binW = maxL/bins;
+  const hist = Array(bins).fill(0);
+  losses.forEach(l=>{ const b=Math.min(bins-1, Math.floor(l/binW)); hist[b]++; });
+
+  const var95 = losses[Math.floor(N*0.95)];
+  const cvar95 = losses.slice(Math.floor(N*0.95)).reduce((a,b)=>a+b,0) / (N*0.05);
+
+  document.getElementById('mVaR').textContent = '€'+var95.toFixed(1)+'M';
+
+  const labels = hist.map((_,i)=>'€'+(i*binW).toFixed(0)+'M');
+  const colors = hist.map((_,i)=>{
+    const mid = i*binW+binW/2;
+    return mid > cvar95 ? '#FF4757' : mid > var95 ? '#FF6B35' : '#4DA8FF';
+  });
+
+  if(monteChart) monteChart.destroy();
+  monteChart = new Chart(document.getElementById('monteChart'),{
+    type:'bar',
+    data:{
+      labels,
+      datasets:[{
+        label:'Loss Frequency',
+        data:hist,
+        backgroundColor:colors,
+        borderRadius:2,
+      }]
+    },
+    options:{
+      responsive:true,
+      animation:{duration:300},
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' Frequency: '+ctx.raw+' simulations'}}
+      },
+      scales:{
+        x:{title:{display:true,text:'Portfolio Loss (€M)',color:'#7B8FA3'},grid:{display:false},ticks:{color:'#7B8FA3',maxTicksLimit:8,font:{size:9}}},
+        y:{title:{display:true,text:'Frequency',color:'#7B8FA3'},grid:{color:'rgba(42,58,78,.3)'},ticks:{color:'#7B8FA3'}}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TRANCHE LOSS ABSORPTION
+// ══════════════════════════════════════════════════════════════════
+function updateAbsorbChart(eqBreak, mezzBreak){
+  if(absorbChart) absorbChart.destroy();
+  absorbChart = new Chart(document.getElementById('absorbChart'),{
+    type:'bar',
+    data:{
+      labels:['Equity\n(First Loss)','OC Buffer','Mezzanine\n(Class B)','Senior\n(Class A)'],
+      datasets:[
+        { label:'Capacity (€M)', data:[STATE.equity, STATE.oc, STATE.classB, STATE.classA], backgroundColor:['#FF4757','#FFC312','#FF6B35','#4DA8FF'], borderRadius:6 },
+        { label:'Break-even CDR', data:[eqBreak, eqBreak, mezzBreak, 99], backgroundColor:['rgba(255,71,87,.2)','rgba(255,195,18,.2)','rgba(255,107,53,.2)','rgba(77,168,255,.2)'], borderColor:['#FF4757','#FFC312','#FF6B35','#4DA8FF'], borderWidth:1, borderRadius:6, type:'bar', yAxisID:'y1' }
+      ]
+    },
+    options:{
+      responsive:true,
+      animation:{duration:300},
+      plugins:{
+        legend:{position:'bottom',labels:{color:'#7B8FA3',font:{size:10},padding:10}},
+        tooltip:{callbacks:{label:ctx=>ctx.datasetIndex===0?' €'+ctx.raw+'M capacity':' Break-even: '+ctx.raw.toFixed(1)+'% CDR'}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:'#7B8FA3',font:{size:10}}},
+        y:{title:{display:true,text:'€ Million',color:'#7B8FA3'},grid:{color:'rgba(42,58,78,.3)'},ticks:{color:'#7B8FA3'}},
+        y1:{position:'right',title:{display:true,text:'Break-even CDR %',color:'#7B8FA3'},grid:{display:false},ticks:{color:'#7B8FA3'},max:20,min:0}
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// EXPORT CSV
+// ══════════════════════════════════════════════════════════════════
+function exportCSV(){
+  let csv = 'Month,Portfolio_EUR_M,Reserve_EUR_M,Debt_Target_EUR_M\n';
+  simData.months.forEach((m,i)=>{
+    csv += `${m},${simData.portfolio[i].toFixed(2)},${simData.reserve[i].toFixed(2)},${simData.debt[i].toFixed(2)}\n`;
+  });
+  const blob = new Blob([csv],{type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Enpal_ABS_Stress_Simulation.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+updateModel();
+</script>
+</body>
+</html>
