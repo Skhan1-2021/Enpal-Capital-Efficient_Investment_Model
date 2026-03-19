@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="author" content="Sazzad Khan | BI Analyst">
+<meta name="description" content="Enpal Project Sunshine — ABS Risk Dashboard">
+<title>Enpal ABS Risk Dashboard — Project Sunshine</title>
+<style>
+  :root {
+    --navy:#0D2B55;--blue:#1A5276;--midb:#2E86C1;--paleb:#D6EAF8;--sky:#EBF5FB;
+    --green:#1A6B4A;--ltg:#D5F5E3;--amber:#7D6608;--ltamb:#FEF9E7;
+    --red:#922B21;--ltr:#FADBD8;--lgray:#F4F6F7;--mgray:#BDC3C7;
+    --dgray:#2C3E50;--gold:#B7950B;--ltgold:#FEF9E7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;background:#f0f2f5;color:var(--dgray);}
+  .header{background:var(--navy);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.3);}
+  .header-top{padding:10px 24px 6px;border-bottom:2px solid var(--midb);}
+  .header-top h1{font-size:18px;font-weight:700;color:white;letter-spacing:.03em;}
+  .header-top .sub{font-size:11px;color:#AED6F1;margin-top:2px;}
+  .header-meta{display:flex;justify-content:space-between;align-items:center;padding:5px 24px;background:#0a2040;font-size:10.5px;color:#AED6F1;}
+  .creator{font-weight:700;color:#5DADE2;}
+  .confidential{background:var(--red);color:white;font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:3px;}
+  .tabs{display:flex;gap:2px;padding:0 24px;background:var(--blue);}
+  .tab{padding:8px 16px;font-size:11.5px;font-weight:600;color:#AED6F1;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap;}
+  .tab:hover{color:white;background:rgba(255,255,255,.08);}
+  .tab.active{color:white;border-bottom-color:#5DADE2;background:rgba(255,255,255,.1);}
+  .main{padding:16px 24px 32px;max-width:1400px;margin:0 auto;}
+  .page{display:none;}.page.active{display:block;}
+  .kpi-bar{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:16px;}
+  .kpi-card{background:white;border-radius:8px;padding:12px 10px 10px;text-align:center;border-top:3px solid var(--midb);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+  .kpi-card .val{font-size:20px;font-weight:700;line-height:1.1;margin-bottom:4px;}
+  .kpi-card .lbl{font-size:10px;color:#666;line-height:1.3;}
+  .kpi-green{border-top-color:var(--green);}.kpi-green .val{color:var(--green);}
+  .kpi-blue{border-top-color:var(--midb);}.kpi-blue .val{color:var(--midb);}
+  .kpi-navy{border-top-color:var(--navy);}.kpi-navy .val{color:var(--navy);}
+  .kpi-amber{border-top-color:var(--amber);}.kpi-amber .val{color:var(--amber);}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+  .grid-65-35{display:grid;grid-template-columns:1.8fr 1fr;gap:14px;margin-bottom:14px;}
+  .card{background:white;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;}
+  .card-hdr{padding:9px 14px;font-size:11.5px;font-weight:700;color:white;}
+  .card-hdr.navy{background:var(--navy);}.card-hdr.blue{background:var(--blue);}
+  .card-hdr.green{background:var(--green);}.card-hdr.amber{background:var(--amber);}
+  .card-hdr.red{background:var(--red);}.card-hdr.gold{background:var(--gold);}
+  .card-body{padding:12px 14px;}
+  table{width:100%;border-collapse:collapse;font-size:11.5px;}
+  th{background:var(--navy);color:white;padding:6px 8px;text-align:center;font-weight:600;font-size:10.5px;}
+  th:first-child{text-align:left;}
+  td{padding:5px 8px;border-bottom:1px solid #eee;text-align:center;font-size:11px;}
+  td:first-child{text-align:left;font-weight:500;}
+  tr:nth-child(even){background:var(--lgray);}tr:hover{background:var(--paleb);}
+  .price-col{color:var(--green);font-weight:700;}
+  .wtd-row{background:var(--ltgold)!important;font-weight:700;}.wtd-row td{color:var(--navy);}
+  .callout{border-left:4px solid var(--midb);background:var(--paleb);padding:9px 12px;border-radius:0 6px 6px 0;margin-bottom:10px;font-size:11.5px;line-height:1.6;color:var(--blue);font-style:italic;}
+  .callout.green{border-left-color:var(--green);background:var(--ltg);color:var(--green);}
+  .callout.amber{border-left-color:var(--amber);background:var(--ltamb);color:var(--amber);}
+  .callout.red{border-left-color:var(--red);background:var(--ltr);color:var(--red);}
+  .callout.navy{border-left-color:var(--navy);background:var(--sky);color:var(--navy);font-style:normal;font-weight:500;}
+  .verdict{display:grid;grid-template-columns:140px 1fr;border:2px solid var(--green);border-radius:8px;overflow:hidden;margin-bottom:14px;}
+  .verdict-label{background:var(--green);color:white;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:14px 10px;text-align:center;line-height:1.3;}
+  .verdict-text{background:var(--ltg);padding:12px 16px;font-size:12px;line-height:1.65;color:var(--navy);}
+  .steps{display:flex;flex-direction:column;gap:8px;}
+  .step{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;}
+  .step-num{width:28px;height:28px;background:var(--midb);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .step-content{padding-top:4px;}
+  .step-title{font-weight:700;font-size:11.5px;color:var(--navy);margin-bottom:2px;}
+  .step-formula{font-family:'Courier New',monospace;font-size:10.5px;background:var(--paleb);border-radius:4px;padding:5px 8px;color:var(--blue);line-height:1.5;}
+  .badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:9.5px;font-weight:700;}
+  .badge-low{background:var(--ltg);color:var(--green);}
+  .badge-med{background:var(--ltamb);color:var(--amber);}
+  .bar-chart{padding:4px 0;}
+  .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .bar-label{width:80px;font-size:10.5px;font-weight:600;text-align:right;color:var(--dgray);flex-shrink:0;}
+  .bar-track{flex:1;background:#eee;border-radius:3px;height:14px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:3px;display:flex;align-items:center;justify-content:flex-end;padding-right:5px;}
+  .bar-val{font-size:9.5px;font-weight:700;color:white;}
+  .bar-pct{width:45px;font-size:10.5px;color:var(--dgray);flex-shrink:0;}
+  .tranche-stack{display:flex;flex-direction:column;gap:3px;}
+  .tranche-block{border-radius:6px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+  .tranche-block .t-name{font-weight:700;font-size:12px;}
+  .tranche-block .t-rating{font-size:10px;opacity:.85;}
+  .tranche-block .t-amt{font-size:15px;font-weight:700;}
+  .tranche-block .t-pct{font-size:10px;opacity:.85;}
+  .t-senior{background:var(--blue);color:white;}
+  .t-mezz{background:var(--midb);color:white;}
+  .t-equity{background:var(--red);color:white;}
+  .footer{background:var(--navy);color:#AED6F1;text-align:center;padding:14px 24px;font-size:10.5px;margin-top:24px;border-top:3px solid var(--midb);}
+  .footer strong{color:#5DADE2;}
+  @media(max-width:900px){.kpi-bar{grid-template-columns:repeat(4,1fr);}.grid-2,.grid-65-35{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <h1>🌞 PROJECT SUNSHINE — ABS Risk &amp; Pricing Dashboard</h1>
+    <div class="sub">Residential Solar &amp; Heat Pump Loan Portfolio &nbsp;·&nbsp; Enpal Structured Finance &nbsp;·&nbsp; Loan Price Calculation &amp; Investment Recommendation</div>
+  </div>
+  <div class="header-meta">
+    <span>Mandate: Pan-European Infrastructure Fund &nbsp;|&nbsp; Assets: Solar PV · Heat Pump · Battery · EV Charger &nbsp;|&nbsp; Law: German &nbsp;|&nbsp; March 19, 2026</span>
+    <span class="creator">Created by: Sazzad Khan | BI Analyst</span>
+    <span class="confidential">STRICTLY CONFIDENTIAL</span>
+  </div>
+  <div class="tabs">
+    <div class="tab active"   onclick="showPage('summary','this')">📊 Summary</div>
+    <div class="tab" onclick="showPage('pricing',this)">💶 Loan Pricing</div>
+    <div class="tab" onclick="showPage('methodology',this)">🧮 Methodology</div>
+    <div class="tab" onclick="showPage('structure',this)">🏗 Structure</div>
+    <div class="tab" onclick="showPage('risk',this)">⚠️ Risk Analysis</div>
+    <div class="tab" onclick="showPage('recommendation',this)">✅ Recommendation</div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- PAGE: SUMMARY -->
+<div class="page active" id="page-summary">
+  <div class="kpi-bar">
+    <div class="kpi-card kpi-green"><div class="val">103.00%</div><div class="lbl">Loan Price — Solar<br>(wtd avg)</div></div>
+    <div class="kpi-card kpi-green"><div class="val">102.14%</div><div class="lbl">Loan Price — Heat Pump<br>(wtd avg)</div></div>
+    <div class="kpi-card kpi-blue"><div class="val">+67 bps</div><div class="lbl">Positive Carry<br>(APR minus yield)</div></div>
+    <div class="kpi-card kpi-navy"><div class="val">5.99%</div><div class="lbl">APR — Fixed<br>for full tenor</div></div>
+    <div class="kpi-card kpi-navy"><div class="val">5.32%</div><div class="lbl">Discount Rate<br>Investor yield</div></div>
+    <div class="kpi-card kpi-amber"><div class="val">0.14%</div><div class="lbl">Blended NEL<br>per annum</div></div>
+    <div class="kpi-card kpi-green"><div class="val">PROCEED</div><div class="lbl">Committee<br>Recommendation</div></div>
+  </div>
+
+  <div class="verdict">
+    <div class="verdict-label">✅ RECOMMENDATION:<br>PROCEED</div>
+    <div class="verdict-text">
+      Acquire at <strong>103.00% of par — Solar</strong> &nbsp;|&nbsp; <strong>102.14% of par — Heat Pump</strong>.
+      APR 5.99% &gt; required yield 5.32% = <strong>+67 bps positive carry from day one</strong>.
+      Blended NEL <strong>0.14% p.a.</strong> across a SCHUFA-A-dominated (43%) pool.
+      All loans fixed-rate, fully amortising, <strong>100% true sale</strong> — no Enpal financial covenants.
+      Even SCHUFA-H (0.60% of pool) prices above par at <strong>100.13%</strong>. <strong>No conditions attached.</strong>
+    </div>
+  </div>
+
+  <div class="grid-65-35">
+    <div class="card">
+      <div class="card-hdr navy">SCHUFA Credit Band Distribution — Portfolio Weight</div>
+      <div class="card-body">
+        <div class="bar-chart">
+          <div class="bar-row"><div class="bar-label">A (Best)</div><div class="bar-track"><div class="bar-fill" style="width:43.26%;background:var(--green)"><span class="bar-val">43.26%</span></div></div><div class="bar-pct">43.26%</div></div>
+          <div class="bar-row"><div class="bar-label">B</div><div class="bar-track"><div class="bar-fill" style="width:24.38%;background:var(--midb)"><span class="bar-val">24.38%</span></div></div><div class="bar-pct">24.38%</div></div>
+          <div class="bar-row"><div class="bar-label">C</div><div class="bar-track"><div class="bar-fill" style="width:10.79%;background:var(--blue)"><span class="bar-val">10.79%</span></div></div><div class="bar-pct">10.79%</div></div>
+          <div class="bar-row"><div class="bar-label">D</div><div class="bar-track"><div class="bar-fill" style="width:8.29%;background:var(--navy)"><span class="bar-val">8.29%</span></div></div><div class="bar-pct">8.29%</div></div>
+          <div class="bar-row"><div class="bar-label">E</div><div class="bar-track"><div class="bar-fill" style="width:5.89%;background:var(--amber)"><span class="bar-val">5.89%</span></div></div><div class="bar-pct">5.89%</div></div>
+          <div class="bar-row"><div class="bar-label">F</div><div class="bar-track"><div class="bar-fill" style="width:4.40%;background:#c0392b"><span class="bar-val">4.40%</span></div></div><div class="bar-pct">4.40%</div></div>
+          <div class="bar-row"><div class="bar-label">G</div><div class="bar-track"><div class="bar-fill" style="width:2.40%;background:var(--red)"><span class="bar-val">2.4%</span></div></div><div class="bar-pct">2.40%</div></div>
+          <div class="bar-row"><div class="bar-label">H (Riskiest)</div><div class="bar-track"><div class="bar-fill" style="width:0.60%;background:#6e2c00"></div></div><div class="bar-pct">0.60%</div></div>
+        </div>
+        <div class="callout green" style="margin-top:10px;margin-bottom:0"><strong>67.64%</strong> of portfolio sits in SCHUFA A &amp; B — the two strongest bands. Over <strong>78%</strong> is in A, B or C.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr blue">Portfolio Quick Facts</div>
+      <div class="card-body">
+        <table>
+          <tr><td>Loan balance per contract</td><td><strong>EUR 30,000</strong></td></tr>
+          <tr><td>APR (fixed for full tenor)</td><td><strong>5.99%</strong></td></tr>
+          <tr><td>Solar monthly payment</td><td><strong>EUR 193</strong></td></tr>
+          <tr><td>Heat pump monthly payment</td><td><strong>EUR 253</strong></td></tr>
+          <tr><td>Solar tenor</td><td><strong>25 years (300 months)</strong></td></tr>
+          <tr><td>Heat pump tenor</td><td><strong>15 years (180 months)</strong></td></tr>
+          <tr><td>Recovery rate (blended)</td><td><strong>20%</strong></td></tr>
+          <tr><td>Discount rate</td><td><strong>5.32%</strong></td></tr>
+          <tr><td>Positive carry</td><td class="price-col"><strong>+67 bps</strong></td></tr>
+          <tr><td>Blended NEL p.a.</td><td><strong>0.14%</strong></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: PRICING -->
+<div class="page" id="page-pricing">
+  <div class="kpi-bar" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card kpi-green"><div class="val">103.00%</div><div class="lbl">Solar Price (wtd avg)</div></div>
+    <div class="kpi-card kpi-green"><div class="val">102.14%</div><div class="lbl">Heat Pump Price (wtd avg)</div></div>
+    <div class="kpi-card kpi-blue"><div class="val">+300 bps</div><div class="lbl">Solar premium above par</div></div>
+    <div class="kpi-card kpi-blue"><div class="val">+214 bps</div><div class="lbl">Heat pump premium above par</div></div>
+  </div>
+  <div class="callout navy" style="margin-bottom:14px"><strong>Missing methodology — sourced &amp; applied:</strong> Loan Price (%) = Present Value ÷ Loan Balance × 100. Price above 100% = premium, justified by +67 bps positive carry (APR 5.99% &gt; discount rate 5.32%).</div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr blue">🌞 Solar Panel Loans — Price by SCHUFA Band</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>SCHUFA</th><th>Weight</th><th>PV (EUR)</th><th>Par (EUR)</th><th>Loan Price</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td>43.26%</td><td>30,957</td><td>30,000</td><td class="price-col">103.19%</td><td>+319 bps</td></tr>
+            <tr><td>B</td><td>24.38%</td><td>30,900</td><td>30,000</td><td class="price-col">103.00%</td><td>+300 bps</td></tr>
+            <tr><td>C</td><td>10.79%</td><td>30,939</td><td>30,000</td><td class="price-col">103.13%</td><td>+313 bps</td></tr>
+            <tr><td>D</td><td>8.29%</td><td>30,879</td><td>30,000</td><td class="price-col">102.93%</td><td>+293 bps</td></tr>
+            <tr><td>E</td><td>5.89%</td><td>30,828</td><td>30,000</td><td class="price-col">102.76%</td><td>+276 bps</td></tr>
+            <tr><td>F</td><td>4.40%</td><td>30,709</td><td>30,000</td><td class="price-col">102.36%</td><td>+236 bps</td></tr>
+            <tr><td>G</td><td>2.40%</td><td>30,411</td><td>30,000</td><td class="price-col">101.37%</td><td>+137 bps</td></tr>
+            <tr><td>H</td><td>0.60%</td><td>30,040</td><td>30,000</td><td class="price-col">100.13%</td><td>+13 bps</td></tr>
+            <tr class="wtd-row"><td>Wtd Avg</td><td>100.0%</td><td>30,898</td><td>30,000</td><td>103.00%</td><td>+300 bps</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr green">🔥 Heat Pump Loans — Price by SCHUFA Band</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>SCHUFA</th><th>Weight</th><th>PV (EUR)</th><th>Par (EUR)</th><th>Loan Price</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td>A</td><td>43.26%</td><td>30,684</td><td>30,000</td><td class="price-col">102.28%</td><td>+228 bps</td></tr>
+            <tr><td>B</td><td>24.38%</td><td>30,644</td><td>30,000</td><td class="price-col">102.15%</td><td>+215 bps</td></tr>
+            <tr><td>C</td><td>10.79%</td><td>30,671</td><td>30,000</td><td class="price-col">102.24%</td><td>+224 bps</td></tr>
+            <tr><td>D</td><td>8.29%</td><td>30,628</td><td>30,000</td><td class="price-col">102.09%</td><td>+209 bps</td></tr>
+            <tr><td>E</td><td>5.89%</td><td>30,592</td><td>30,000</td><td class="price-col">101.97%</td><td>+197 bps</td></tr>
+            <tr><td>F</td><td>4.40%</td><td>30,508</td><td>30,000</td><td class="price-col">101.69%</td><td>+169 bps</td></tr>
+            <tr><td>G</td><td>2.40%</td><td>30,295</td><td>30,000</td><td class="price-col">100.98%</td><td>+98 bps</td></tr>
+            <tr><td>H</td><td>0.60%</td><td>30,029</td><td>30,000</td><td class="price-col">100.10%</td><td>+10 bps</td></tr>
+            <tr class="wtd-row"><td>Wtd Avg</td><td>100.0%</td><td>30,641</td><td>30,000</td><td>102.14%</td><td>+214 bps</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="callout green">Even SCHUFA H — the riskiest 0.60% of the portfolio — prices above par at 100.10%–100.13%. The portfolio's credit quality holds across all bands without exception.</div>
+</div>
+
+<!-- PAGE: METHODOLOGY -->
+<div class="page" id="page-methodology">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-hdr navy">5-Step Loan Price Calculation — Complete Methodology</div>
+    <div class="card-body">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Monthly Annuity Payment — Standard Annuity Formula</div>
+            <div class="step-formula">Payment = P × [r(1+r)^n] / [(1+r)^n − 1]&nbsp;&nbsp;&nbsp;where r = APR/12 = 5.99%/12 = 0.4992%/month<br>Solar (n=300 months): 30,000 × formula = <strong>EUR 193/month ✓</strong><br>Heat pump (n=180 months): 30,000 × formula = <strong>EUR 253/month ✓</strong></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Net Expected Loss (NEL) per SCHUFA Band</div>
+            <div class="step-formula">NEL = Expected Default Rate × (1 − Recovery Rate)&nbsp;&nbsp;&nbsp;Recovery = 20% blended<br>SCHUFA A: 0.12% × 0.80 = <strong>0.10%</strong>&nbsp;&nbsp;|&nbsp;&nbsp;SCHUFA H: 0.95% × 0.80 = <strong>0.76%</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Wtd avg: <strong>0.14% p.a. ✓</strong></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Discount Rate — Investor Required Yield (constant across all bands)</div>
+            <div class="step-formula">Discount Rate = EURIBOR (~3.75%) + ABS spread (~1.43%) + Blended NEL (0.14%) = <strong>5.32%</strong><br>Per-band credit risk is already captured in NEL — discount rate is constant for all SCHUFA bands.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Present Value of All Future Cash Flows</div>
+            <div class="step-formula">PV = Payment × [1−(1+r_d)^−n / r_d] × (1−NEL)&nbsp;&nbsp;&nbsp;r_d = 5.32%/12 = 0.4433%/month<br>Solar wtd avg (n=300, pmt=193): PV = <strong>EUR 30,898</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Heat pump wtd avg (n=180, pmt=253): PV = <strong>EUR 30,641</strong></div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num" style="background:var(--green)">5</div>
+          <div class="step-content">
+            <div class="step-title" style="color:var(--green)">Loan Price — The Missing Methodology (sourced &amp; applied)</div>
+            <div class="step-formula" style="background:var(--ltg);color:var(--green);border-left:3px solid var(--green)">Loan Price (%) = Present Value / Loan Balance × 100<br>Solar wtd avg: 30,898 / 30,000 × 100 = <strong>103.00% ✓</strong>&nbsp;&nbsp;|&nbsp;&nbsp;Heat pump wtd avg: 30,641 / 30,000 × 100 = <strong>102.14% ✓</strong><br>Above par because APR 5.99% &gt; Discount rate 5.32% = +67 bps positive carry.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr blue">Complete Calculation Reference — All SCHUFA Bands</div>
+    <div class="card-body" style="padding:0;overflow-x:auto">
+      <table>
+        <thead><tr><th style="text-align:left">Parameter</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th><th>G</th><th>H</th><th style="background:var(--gold)">Wtd Avg</th></tr></thead>
+        <tbody>
+          <tr><td>SCHUFA Weight</td><td>43.26%</td><td>24.38%</td><td>10.79%</td><td>8.29%</td><td>5.89%</td><td>4.40%</td><td>2.40%</td><td>0.60%</td><td><strong>100.0%</strong></td></tr>
+          <tr><td>APR</td><td colspan="9" style="text-align:center">5.99% — fixed for all bands</td></tr>
+          <tr><td>Loan Balance (EUR)</td><td colspan="9" style="text-align:center">30,000 — fixed for all bands</td></tr>
+          <tr><td>Monthly Annuity — Solar</td><td colspan="9" style="text-align:center">EUR 193 — fixed for all bands</td></tr>
+          <tr><td>Monthly Annuity — Heat Pump</td><td colspan="9" style="text-align:center">EUR 253 — fixed for all bands</td></tr>
+          <tr><td>Expected Default p.a.</td><td>0.12%</td><td>0.17%</td><td>0.14%</td><td>0.19%</td><td>0.23%</td><td>0.34%</td><td>0.61%</td><td>0.95%</td><td><strong>0.17%</strong></td></tr>
+          <tr><td>Recovery Rate</td><td colspan="9" style="text-align:center">20% — fixed for all bands</td></tr>
+          <tr><td>Net Expected Loss p.a.</td><td>0.10%</td><td>0.14%</td><td>0.11%</td><td>0.15%</td><td>0.19%</td><td>0.27%</td><td>0.49%</td><td>0.76%</td><td><strong>0.14%</strong></td></tr>
+          <tr><td>Discount Rate</td><td colspan="9" style="text-align:center">5.32% — fixed for all bands</td></tr>
+          <tr><td>PV — Solar</td><td>30,957</td><td>30,900</td><td>30,939</td><td>30,879</td><td>30,828</td><td>30,709</td><td>30,411</td><td>30,040</td><td><strong>30,898</strong></td></tr>
+          <tr><td>PV — Heat Pump</td><td>30,684</td><td>30,644</td><td>30,671</td><td>30,628</td><td>30,592</td><td>30,508</td><td>30,295</td><td>30,029</td><td><strong>30,641</strong></td></tr>
+          <tr style="background:var(--paleb)"><td><strong>Loan Price — Solar</strong></td><td class="price-col"><strong>103.19%</strong></td><td class="price-col"><strong>103.00%</strong></td><td class="price-col"><strong>103.13%</strong></td><td class="price-col"><strong>102.93%</strong></td><td class="price-col"><strong>102.76%</strong></td><td class="price-col"><strong>102.36%</strong></td><td class="price-col"><strong>101.37%</strong></td><td class="price-col"><strong>100.13%</strong></td><td class="price-col" style="background:var(--ltgold)"><strong>103.00%</strong></td></tr>
+          <tr style="background:var(--ltg)"><td><strong>Loan Price — Heat Pump</strong></td><td class="price-col"><strong>102.28%</strong></td><td class="price-col"><strong>102.15%</strong></td><td class="price-col"><strong>102.24%</strong></td><td class="price-col"><strong>102.09%</strong></td><td class="price-col"><strong>101.97%</strong></td><td class="price-col"><strong>101.69%</strong></td><td class="price-col"><strong>100.98%</strong></td><td class="price-col"><strong>100.10%</strong></td><td class="price-col" style="background:var(--ltgold)"><strong>102.14%</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: STRUCTURE -->
+<div class="page" id="page-structure">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr navy">Transaction Parties (Term Sheet)</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>Role</th><th>Entity</th></tr></thead>
+          <tbody>
+            <tr><td>Seller 1 / Servicer 1</td><td>Enpal B.V. ("Enpal")</td></tr>
+            <tr><td>Seller 2 / Servicer 2</td><td>Enpal Dragon GmbH — 100% subsidiary</td></tr>
+            <tr><td>Seller 3 / Servicer 3</td><td>EFS Deutschland GmbH — 100% subsidiary</td></tr>
+            <tr><td>Seller 4 / Servicer 4</td><td>Green Financial Solutions S.A., Compartment Omega</td></tr>
+            <tr><td>Purchaser</td><td>Pan-European Infrastructure Fund</td></tr>
+            <tr><td>Governing Law</td><td>German law</td></tr>
+            <tr><td>Drafting Counsel</td><td>Counsel to Enpal</td></tr>
+            <tr><td>Purchaser Costs</td><td>DD &amp; legal costs borne by Purchaser</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr blue">ABS Tranche Structure</div>
+      <div class="card-body">
+        <div class="tranche-stack">
+          <div class="tranche-block t-senior"><div><div class="t-name">Senior Tranche</div><div class="t-rating">Rating: AAA — Safest layer</div></div><div style="text-align:right"><div class="t-amt">80%</div><div class="t-pct">Protected by 20% cushion below</div></div></div>
+          <div class="tranche-block t-mezz"><div><div class="t-name">Mezzanine Tranche</div><div class="t-rating">Rating: BBB — Middle risk</div></div><div style="text-align:right"><div class="t-amt">10%</div><div class="t-pct">Only hit after full equity wipeout</div></div></div>
+          <div class="tranche-block t-equity"><div><div class="t-name">Equity / Junior</div><div class="t-rating">First-loss — highest risk</div></div><div style="text-align:right"><div class="t-amt">10%</div><div class="t-pct">Absorbs all losses first</div></div></div>
+        </div>
+        <div class="callout" style="margin-top:10px;margin-bottom:0">Senior investors are protected by a <strong>20% combined buffer</strong> before any losses reach them.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hdr blue">Asset Eligibility Criteria — Directly from Term Sheet</div>
+    <div class="card-body" style="padding:0">
+      <table>
+        <thead><tr><th>Criterion</th><th>Requirement</th></tr></thead>
+        <tbody>
+          <tr><td>Denomination</td><td>EUR denominated · monthly payment terms</td></tr>
+          <tr><td>Borrower type</td><td>Natural persons only — German property owners</td></tr>
+          <tr><td>Credit quality</td><td>SCHUFA A–H · no delinquent or defaulted receivables</td></tr>
+          <tr><td>Balance cap</td><td>Up to EUR 90,000 original balance per contract</td></tr>
+          <tr><td>Solar assets</td><td>PV systems · Battery storage · EV charger · Related installation products</td></tr>
+          <tr><td>Heat pump assets</td><td>Heat pump systems · other related products</td></tr>
+          <tr><td>Solar tenor</td><td>5–25 years · annuity · fully amortising · no bullet payments</td></tr>
+          <tr><td>Heat pump tenor</td><td>5–15 years · annuity · fully amortising · no bullet payments</td></tr>
+          <tr><td>Interest rate</td><td>Fixed for the full tenor of the contract</td></tr>
+          <tr><td>Payment structure</td><td>Monthly instalments · one step-up during contract lifetime · no prepayment penalty</td></tr>
+          <tr><td>Asset transfer</td><td>100% true sale — receivables transferred outright to Purchaser</td></tr>
+          <tr><td>Servicing</td><td>By Enpal entities · 0.35% p.a. of notional super senior · monthly loan-by-loan reporting</td></tr>
+          <tr><td>Forward flow</td><td>24-month commitment · weekly/monthly purchase frequency</td></tr>
+          <tr><td>Exclusions</td><td>No delinquent/defaulted receivables · no withheld instalment contracts</td></tr>
+          <tr><td>Reps &amp; Warranties</td><td>Customary for transactions of this type · no Enpal financial covenants</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: RISK -->
+<div class="page" id="page-risk">
+  <div class="kpi-bar" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi-card kpi-amber"><div class="val">0.14%</div><div class="lbl">Blended NEL p.a.</div></div>
+    <div class="kpi-card kpi-green"><div class="val">20%</div><div class="lbl">Recovery Rate (blended)</div></div>
+    <div class="kpi-card kpi-amber"><div class="val">0.17%</div><div class="lbl">Blended Default Rate p.a.</div></div>
+    <div class="kpi-card kpi-green"><div class="val">Fixed</div><div class="lbl">Rate type — zero EURIBOR risk</div></div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr red">Key Risks &amp; Mitigants</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>Risk</th><th>Level</th><th>Mitigant</th></tr></thead>
+          <tbody>
+            <tr><td>Borrower unemployment / income shock</td><td><span class="badge badge-med">Medium</span></td><td>NEL per SCHUFA band prices in default stress; 43% SCHUFA-A pool</td></tr>
+            <tr><td>Regulatory change (EEG / feed-in tariff)</td><td><span class="badge badge-med">Medium</span></td><td>Heat &amp; power non-discretionary; payment ability intact regardless</td></tr>
+            <tr><td>Servicer performance risk (Enpal)</td><td><span class="badge badge-low">Low</span></td><td>True sale isolates assets; 0.35% fee aligns incentives; monthly reporting</td></tr>
+            <tr><td>Interest rate rise (EURIBOR)</td><td><span class="badge badge-low">Low</span></td><td>All contracts fixed-rate for full tenor — zero floating exposure</td></tr>
+            <tr><td>Prepayment / early exit</td><td><span class="badge badge-low">Low</span></td><td>Annuity structure; one step-up max; no bullets in any contract</td></tr>
+            <tr><td>Product concentration</td><td><span class="badge badge-low">Low</span></td><td>Mixed pool: solar PV, battery, EV charger, heat pump — diversified</td></tr>
+            <tr><td>Enpal corporate insolvency</td><td><span class="badge badge-low">Low</span></td><td>100% true sale — assets legally owned by Purchaser outright</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr amber">Net Expected Loss by SCHUFA Band</div>
+      <div class="card-body">
+        <div class="bar-chart">
+          <div class="bar-row"><div class="bar-label">A</div><div class="bar-track"><div class="bar-fill" style="width:13%;background:var(--green)"><span class="bar-val">0.10%</span></div></div><div class="bar-pct">0.10%</div></div>
+          <div class="bar-row"><div class="bar-label">B</div><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--green)"><span class="bar-val">0.14%</span></div></div><div class="bar-pct">0.14%</div></div>
+          <div class="bar-row"><div class="bar-label">C</div><div class="bar-track"><div class="bar-fill" style="width:14.5%;background:var(--midb)"><span class="bar-val">0.11%</span></div></div><div class="bar-pct">0.11%</div></div>
+          <div class="bar-row"><div class="bar-label">D</div><div class="bar-track"><div class="bar-fill" style="width:19.7%;background:var(--midb)"><span class="bar-val">0.15%</span></div></div><div class="bar-pct">0.15%</div></div>
+          <div class="bar-row"><div class="bar-label">E</div><div class="bar-track"><div class="bar-fill" style="width:25%;background:var(--amber)"><span class="bar-val">0.19%</span></div></div><div class="bar-pct">0.19%</div></div>
+          <div class="bar-row"><div class="bar-label">F</div><div class="bar-track"><div class="bar-fill" style="width:35.5%;background:var(--amber)"><span class="bar-val">0.27%</span></div></div><div class="bar-pct">0.27%</div></div>
+          <div class="bar-row"><div class="bar-label">G</div><div class="bar-track"><div class="bar-fill" style="width:64.5%;background:var(--red)"><span class="bar-val">0.49%</span></div></div><div class="bar-pct">0.49%</div></div>
+          <div class="bar-row"><div class="bar-label">H</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:#6e2c00"><span class="bar-val">0.76%</span></div></div><div class="bar-pct">0.76%</div></div>
+        </div>
+        <div class="callout amber" style="margin-top:10px;margin-bottom:0">SCHUFA H (0.76% NEL) affects only <strong>0.60% of portfolio</strong>. Its weighted contribution to blended NEL: 0.76% × 0.60% = <strong>0.0046%</strong> — negligible.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PAGE: RECOMMENDATION -->
+<div class="page" id="page-recommendation">
+  <div class="verdict" style="margin-bottom:16px">
+    <div class="verdict-label" style="font-size:15px">✅<br>PROCEED<br><span style="font-size:11px;font-weight:400">No conditions required</span></div>
+    <div class="verdict-text" style="font-size:12.5px">
+      Acquire at <strong>103.00% of par — Solar</strong> &nbsp;|&nbsp; <strong>102.14% of par — Heat Pump</strong>.
+      +67 bps positive carry from day one. Blended NEL 0.14% p.a. SCHUFA-A dominant (43%).
+      Fixed-rate, fully amortising, 100% true sale. No Enpal financial covenants. SCHUFA-H (0.60%) still above par.
+      <strong>No conditions attached.</strong>
+    </div>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-hdr green">Investment Rationale</div>
+      <div class="card-body" style="padding:0">
+        <table>
+          <thead><tr><th>Factor</th><th>Finding</th><th>Verdict</th></tr></thead>
+          <tbody>
+            <tr><td>Positive carry</td><td>APR 5.99% &gt; yield 5.32% → +67 bps</td><td class="price-col">SUPPORTS PREMIUM</td></tr>
+            <tr><td>Credit quality</td><td>43% SCHUFA-A · NEL only 0.14% p.a.</td><td class="price-col">STRONG</td></tr>
+            <tr><td>Weakest band impact</td><td>SCHUFA-H (0.60%) still at 100.13%</td><td class="price-col">RISK CONTAINED</td></tr>
+            <tr><td>Rate risk</td><td>All loans fixed for full tenor</td><td class="price-col">ZERO EXPOSURE</td></tr>
+            <tr><td>Legal structure</td><td>100% true sale · no Enpal covenants</td><td class="price-col">FULLY PROTECTED</td></tr>
+            <tr><td>Deal pipeline</td><td>24-month forward flow</td><td class="price-col">AUM SCALABLE</td></tr>
+            <tr><td>Asset resilience</td><td>Heat &amp; power are non-discretionary</td><td class="price-col">PAYMENT RESILIENT</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr navy">Final Price Summary &amp; Closing Statement</div>
+      <div class="card-body">
+        <table style="margin-bottom:12px">
+          <thead><tr><th>Asset Type</th><th>Wtd Avg PV</th><th>Par Value</th><th>Loan Price</th><th>Premium</th></tr></thead>
+          <tbody>
+            <tr><td>Solar Loans</td><td>EUR 30,898</td><td>EUR 30,000</td><td class="price-col"><strong>103.00%</strong></td><td>+300 bps</td></tr>
+            <tr><td>Heat Pump Loans</td><td>EUR 30,641</td><td>EUR 30,000</td><td class="price-col"><strong>102.14%</strong></td><td>+214 bps</td></tr>
+          </tbody>
+        </table>
+        <div class="callout navy" style="margin-bottom:0">"At 103% solar and 102% heat pump, the investor earns a risk-adjusted spread of 53 bps over the discount rate — on a SCHUFA-A-dominated, fully amortising, fixed-rate portfolio with no bullet risk. This is a clean, bankable transaction. <strong>Recommend proceeding at stated prices.</strong>"</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <div style="margin-bottom:5px">Project Sunshine &nbsp;|&nbsp; Enpal Structured Finance &nbsp;|&nbsp; ABS Risk &amp; Pricing Dashboard &nbsp;|&nbsp; March 19, 2026</div>
+  <div><strong>Created by: Sazzad Khan | BI Analyst</strong> &nbsp;|&nbsp; Strictly Confidential — For Internal Use Only &nbsp;|&nbsp; Enpal Investment Team</div>
+</div>
+
+<script>
+function showPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (el && el !== 'this') el.classList.add('active');
+  else {
+    document.querySelectorAll('.tab').forEach(t => {
+      if (t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+id+"'")) t.classList.add('active');
+    });
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+</body>
+</html>
