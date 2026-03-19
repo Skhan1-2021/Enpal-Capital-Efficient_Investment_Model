@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Active Scope Dashboard — BP Gelsenkirchen Turnaround | Sazzad Khan</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f1efe8;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --text-primary: #1a1a18;
+    --text-secondary: #5f5e5a;
+    --text-hint: #888780;
+    --accent: #185FA5;
+    --accent-light: #E6F1FB;
+    --red: #A32D2D;
+    --red-light: #FCEBEB;
+    --red-mid: #E24B4A;
+    --amber: #854F0B;
+    --amber-light: #FAEEDA;
+    --amber-mid: #EF9F27;
+    --green: #27500A;
+    --green-light: #EAF3DE;
+    --green-mid: #639922;
+    --gray-mid: #B4B2A9;
+    --gray-light: #F1EFE8;
+    --gray-text: #444441;
+    --blue-mid: #378ADD;
+    --blue-dark: #0C447C;
+    --font: 'DM Sans', sans-serif;
+    --mono: 'DM Mono', monospace;
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* TOP HEADER BAR */
+  .header-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-left { display: flex; align-items: center; gap: 14px; }
+  .header-logo {
+    width: 36px; height: 36px; background: var(--text-primary);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .header-logo svg { width: 20px; height: 20px; fill: white; }
+  .header-title { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+  .header-sub { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+  .header-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .hbadge {
+    font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .hbadge-red { background: var(--red-light); color: var(--red); border-color: #F09595; }
+  .hbadge-amber { background: var(--amber-light); color: var(--amber); border-color: #FAC775; }
+  .hbadge-green { background: var(--green-light); color: var(--green); border-color: #C0DD97; }
+
+  /* MAIN LAYOUT */
+  .main { max-width: 1200px; margin: 0 auto; padding: 28px 32px 60px; }
+
+  /* KPI ROW */
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    text-align: center;
+    transition: transform 0.15s;
+  }
+  .kpi:hover { transform: translateY(-1px); }
+  .kpi-val { font-size: 28px; font-weight: 600; line-height: 1; }
+  .kpi-lbl { font-size: 11px; color: var(--text-secondary); margin-top: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .kpi-sub { font-size: 11px; color: var(--text-hint); margin-top: 3px; }
+
+  /* LEGEND */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    align-items: center;
+  }
+  .legend-title { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+  .leg-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+  .leg-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+  /* PID CARD */
+  .pid-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    margin-bottom: 22px;
+    overflow-x: auto;
+  }
+  .pid-card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .pid-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .pid-card-ref { font-size: 11px; color: var(--text-hint); font-family: var(--mono); }
+
+  /* SVG STYLES */
+  .node { cursor: pointer; }
+  .node:hover rect { filter: brightness(0.95); }
+
+  /* DETAIL PANEL */
+  .detail-panel {
+    background: var(--surface);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 20px 24px;
+    margin-bottom: 22px;
+    display: none;
+    animation: slideIn 0.2s ease;
+  }
+  .detail-panel.open { display: block; }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+  .dp-header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .dp-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+  .dp-close {
+    font-size: 12px; padding: 5px 12px;
+    border: 1px solid var(--border-strong); border-radius: 6px;
+    background: none; color: var(--text-secondary); cursor: pointer;
+    font-family: var(--font);
+    transition: background 0.15s;
+  }
+  .dp-close:hover { background: var(--surface2); }
+
+  .dp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px,1fr));
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .dp-field {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 9px 12px;
+  }
+  .dp-field-lbl { font-size: 10px; font-weight: 600; color: var(--text-hint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .dp-field-val { font-size: 13px; color: var(--text-primary); font-weight: 500; line-height: 1.4; }
+
+  .status-pill {
+    display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px; margin-top: 4px;
+  }
+  .s-critical { background: var(--red-light); color: var(--red); }
+  .s-pending  { background: var(--amber-light); color: var(--amber); }
+  .s-ready    { background: var(--green-light); color: var(--green); }
+  .s-outscope { background: var(--gray-light); color: var(--gray-text); }
+
+  .inc-flag {
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; line-height: 1.6; margin: 10px 0;
+  }
+  .inc-flag-high { background: var(--red-light); color: var(--red); border-left: 3px solid var(--red-mid); }
+  .inc-flag-med  { background: var(--amber-light); color: var(--amber); border-left: 3px solid var(--amber-mid); }
+
+  .coord-note {
+    background: var(--accent-light);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 12px; color: var(--blue-dark); line-height: 1.65;
+    border-left: 3px solid var(--accent);
+  }
+  .coord-note strong { font-weight: 600; }
+
+  /* SECTION LABEL */
+  .section-lbl {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.07em; color: var(--text-secondary); margin-bottom: 10px;
+  }
+
+  /* TABLE */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .table-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+  .inc-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .inc-table th {
+    font-size: 10px; font-weight: 700; color: var(--text-hint);
+    text-align: left; padding: 8px 14px;
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .inc-table td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+    color: var(--text-primary); vertical-align: top; line-height: 1.5;
+  }
+  .inc-table tr:last-child td { border-bottom: none; }
+  .inc-table tr:hover td { background: var(--surface2); }
+  .tag-cell { font-family: var(--mono); font-weight: 600; font-size: 12px; }
+  .risk-high { color: var(--red); font-weight: 600; }
+  .risk-med  { color: var(--amber); font-weight: 600; }
+  .risk-low  { color: var(--green); font-weight: 600; }
+
+  /* FOOTER */
+  .footer {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 18px;
+    font-size: 12px; color: var(--text-secondary);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+  }
+  .footer-credit { font-weight: 600; color: var(--text-primary); }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .main { padding: 16px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .header-bar { padding: 12px 16px; }
+    .header-badges { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header-bar">
+  <div class="header-left">
+    <div class="header-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <div class="header-title">Active Scope Dashboard — BP Gelsenkirchen Turnaround</div>
+      <div class="header-sub">P&ID Unit: KO1 / SB1 / PL1A+B &nbsp;·&nbsp; Coordinator: Sazzad Khan &nbsp;·&nbsp; 19.03.2026 &nbsp;·&nbsp; IMG Tec GmbH</div>
+    </div>
+  </div>
+  <div class="header-badges">
+    <span class="hbadge hbadge-red">2 Critical</span>
+    <span class="hbadge hbadge-amber">3 Pending</span>
+    <span class="hbadge hbadge-green">3 Frozen</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- KPI ROW -->
+  <div class="kpi-row">
+    <div class="kpi">
+      <div class="kpi-val" style="color:var(--red)">2</div>
+      <div class="kpi-lbl">Critical path</div>
+      <div class="kpi-sub">KO1 · PL1AM1</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" style="color:var(--amber)">3</div>
+      <div class="kpi-lbl">Inspection pending</div>
+      <div class="kpi-sub">SB1 · YCZ · FIR-02</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" style="color:var(--green)">3</div>
+      <div class="kpi-lbl">Scope frozen</div>
+      <div class="kpi-sub">PL1BM1 · N8 · AR-01</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val">148h</div>
+      <div class="kpi-lbl">Total man-hours</div>
+      <div class="kpi-sub">+13.5h inconsistencies</div>
+    </div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <span class="legend-title">Status key</span>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--red-mid)"></div>Critical path — must do first</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--amber-mid)"></div>Inspection pending / Vor-Ort-Begehung</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--green-mid)"></div>Scope frozen / ready for execution</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--gray-mid)"></div>Out of scope</div>
+    <div class="leg-item">
+      <div class="leg-dot" style="background:var(--red-mid);border:2px solid var(--red)"></div>
+      Data inconsistency flagged
+    </div>
+  </div>
+
+  <!-- P&ID CARD -->
+  <div class="pid-card">
+    <div class="pid-card-header">
+      <div class="pid-card-title">R&I-Fließbild — Active scope overlay (click any equipment node to inspect)</div>
+      <div class="pid-card-ref">012340-500-40WE02D2N01 · Rev.3 · Distillation unit</div>
+    </div>
+
+    <svg width="100%" viewBox="0 0 860 450" style="min-width:600px">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- BACKGROUND GRID (subtle) -->
+      <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e8e6e0" stroke-width="0.5"/>
+        </pattern>
+      </defs>
+      <rect width="860" height="450" fill="url(#grid)" opacity="0.5"/>
+
+      <!-- PIPE NETWORK -->
+      <!-- Overhead line KO1 top → SB1 -->
+      <line x1="220" y1="108" x2="490" y2="108" stroke="#888780" stroke-width="2.5" fill="none"/>
+      <text x="340" y="100" text-anchor="middle" style="fill:#888780;font-size:11px;font-family:'DM Sans',sans-serif">3% slope</text>
+      <!-- KO1 bottom → pump area -->
+      <path d="M220 340 L220 390 L430 390 L430 360" stroke="#888780" stroke-width="2.5" fill="none"/>
+      <!-- Pump A → B discharge -->
+      <line x1="515" y1="340" x2="620" y2="340" stroke="#888780" stroke-width="2" fill="none"/>
+      <!-- Feed inlet arrow -->
+      <line x1="30" y1="220" x2="85" y2="220" stroke="#888780" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+      <text x="15" y="216" style="fill:#888780;font-size:11px;font-family:'DM Sans',sans-serif">Feed</text>
+      <!-- Bottoms out -->
+      <line x1="220" y1="415" x2="160" y2="415" stroke="#888780" stroke-width="2.5" fill="none" marker-end="url(#arr)"/>
+      <text x="100" y="419" style="fill:#888780;font-size:10px;font-family:'DM Sans',sans-serif">Bottoms</text>
+      <!-- SB1 outlet -->
+      <line x1="650" y1="155" x2="700" y2="155" stroke="#888780" stroke-width="2" fill="none" marker-end="url(#arr)"/>
+      <text x="706" y="159" style="fill:#888780;font-size:11px;font-family:'DM Sans',sans-serif">Overhead product</text>
+
+      <!-- HEIGHT ANNOTATIONS -->
+      <line x1="50" y1="108" x2="50" y2="220" stroke="#D3D1C7" stroke-width="0.75"/>
+      <text x="42" y="168" text-anchor="middle" style="fill:#B4B2A9;font-size:10px;font-family:'DM Mono',monospace">6.0m</text>
+      <line x1="50" y1="220" x2="50" y2="340" stroke="#D3D1C7" stroke-width="0.75"/>
+      <text x="42" y="284" text-anchor="middle" style="fill:#B4B2A9;font-size:10px;font-family:'DM Mono',monospace">1.5m</text>
+
+      <!-- KO1 — CRITICAL PATH -->
+      <g class="node" onclick="showDetail('ko1')">
+        <rect x="85" y="108" width="135" height="270" rx="10" fill="#FCEBEB" stroke="#E24B4A" stroke-width="2.5"/>
+        <!-- Tray internals -->
+        <line x1="85" y1="160" x2="220" y2="160" stroke="#F09595" stroke-width="0.5" stroke-dasharray="5 4"/>
+        <line x1="85" y1="205" x2="220" y2="205" stroke="#F09595" stroke-width="0.5" stroke-dasharray="5 4"/>
+        <line x1="85" y1="250" x2="220" y2="250" stroke="#F09595" stroke-width="0.5" stroke-dasharray="5 4"/>
+        <line x1="85" y1="295" x2="220" y2="295" stroke="#F09595" stroke-width="0.5" stroke-dasharray="5 4"/>
+        <!-- Tag label -->
+        <text x="152" y="240" text-anchor="middle" dominant-baseline="central" style="fill:#791F1F;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">KO1</text>
+        <text x="152" y="262" text-anchor="middle" style="fill:#A32D2D;font-size:11px;font-family:'DM Sans',sans-serif">Distillation column</text>
+        <text x="152" y="278" text-anchor="middle" style="fill:#A32D2D;font-size:10px;font-family:'DM Mono',monospace">012340-500-40WE02D2N01</text>
+        <!-- Inconsistency badge -->
+        <rect x="168" y="112" width="46" height="18" rx="5" fill="#E24B4A"/>
+        <text x="191" y="121" text-anchor="middle" dominant-baseline="central" style="fill:white;font-size:10px;font-weight:700;font-family:'DM Sans',sans-serif">! INCONS</text>
+        <!-- Hover hint -->
+        <rect x="85" y="108" width="135" height="270" rx="10" fill="transparent" stroke="transparent" stroke-width="0"/>
+      </g>
+
+      <!-- TR instrument top -->
+      <circle cx="116" cy="88" r="14" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="116" y="84" text-anchor="middle" dominant-baseline="central" style="fill:#0C447C;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif">TR</text>
+      <text x="116" y="96" text-anchor="middle" style="fill:#5f8cc5;font-size:9px;font-family:'DM Mono',monospace">01</text>
+      <line x1="116" y1="102" x2="116" y2="108" stroke="#378ADD" stroke-width="1" stroke-dasharray="3 2"/>
+
+      <!-- PI instrument left side -->
+      <circle cx="65" cy="195" r="13" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="65" y="191" text-anchor="middle" dominant-baseline="central" style="fill:#0C447C;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif">PI</text>
+      <text x="65" y="202" text-anchor="middle" style="fill:#5f8cc5;font-size:9px;font-family:'DM Mono',monospace">02</text>
+      <line x1="78" y1="195" x2="85" y2="195" stroke="#378ADD" stroke-width="1" stroke-dasharray="3 2"/>
+
+      <!-- LIC level control -->
+      <circle cx="65" cy="285" r="13" fill="#FAEEDA" stroke="#BA7517" stroke-width="1.5"/>
+      <text x="65" y="281" text-anchor="middle" dominant-baseline="central" style="fill:#633806;font-size:9px;font-weight:600;font-family:'DM Sans',sans-serif">LIC</text>
+      <text x="65" y="292" text-anchor="middle" style="fill:#854F0B;font-size:8px;font-family:'DM Mono',monospace">03</text>
+      <line x1="78" y1="285" x2="85" y2="285" stroke="#BA7517" stroke-width="1" stroke-dasharray="3 2"/>
+
+      <!-- TI bottom -->
+      <circle cx="152" cy="428" r="13" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="152" y="424" text-anchor="middle" dominant-baseline="central" style="fill:#0C447C;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif">TI</text>
+      <text x="152" y="435" text-anchor="middle" style="fill:#5f8cc5;font-size:9px;font-family:'DM Mono',monospace">01</text>
+
+      <!-- SB1 — INSPECTION PENDING -->
+      <g class="node" onclick="showDetail('sb1')">
+        <rect x="490" y="108" width="160" height="110" rx="10" fill="#FAEEDA" stroke="#EF9F27" stroke-width="2"/>
+        <text x="570" y="158" text-anchor="middle" dominant-baseline="central" style="fill:#633806;font-size:16px;font-weight:700;font-family:'DM Sans',sans-serif">SB1</text>
+        <text x="570" y="178" text-anchor="middle" style="fill:#854F0B;font-size:11px;font-family:'DM Sans',sans-serif">Separator / storage</text>
+        <text x="570" y="194" text-anchor="middle" style="fill:#854F0B;font-size:10px;font-family:'DM Mono',monospace">012349-50-10HE02</text>
+      </g>
+
+      <!-- AR instrument SB1 top -->
+      <circle cx="540" cy="88" r="13" fill="#E6F1FB" stroke="#378ADD" stroke-width="1.5"/>
+      <text x="540" y="84" text-anchor="middle" dominant-baseline="central" style="fill:#0C447C;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif">AR</text>
+      <text x="540" y="95" text-anchor="middle" style="fill:#5f8cc5;font-size:9px;font-family:'DM Mono',monospace">01</text>
+      <line x1="540" y1="101" x2="540" y2="108" stroke="#378ADD" stroke-width="1" stroke-dasharray="3 2"/>
+
+      <!-- FIR on overhead line — INSPECTION PENDING -->
+      <g class="node" onclick="showDetail('fir02')">
+        <circle cx="370" cy="90" r="14" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1.5"/>
+        <text x="370" y="86" text-anchor="middle" dominant-baseline="central" style="fill:#633806;font-size:9px;font-weight:600;font-family:'DM Sans',sans-serif">FIR</text>
+        <text x="370" y="97" text-anchor="middle" style="fill:#854F0B;font-size:9px;font-family:'DM Mono',monospace">02</text>
+        <line x1="370" y1="104" x2="370" y2="108" stroke="#EF9F27" stroke-width="1" stroke-dasharray="3 2"/>
+      </g>
+
+      <!-- UC control valve -->
+      <circle cx="300" cy="245" r="13" fill="#FAEEDA" stroke="#BA7517" stroke-width="1.5"/>
+      <text x="300" y="241" text-anchor="middle" dominant-baseline="central" style="fill:#633806;font-size:10px;font-weight:600;font-family:'DM Sans',sans-serif">UC</text>
+      <text x="300" y="252" text-anchor="middle" style="fill:#854F0B;font-size:8px;font-family:'DM Mono',monospace">04</text>
+      <line x1="300" y1="232" x2="300" y2="220" stroke="#BA7517" stroke-width="1" stroke-dasharray="3 2"/>
+
+      <!-- YCZ control valve — INSPECTION PENDING -->
+      <g class="node" onclick="showDetail('ycz')">
+        <rect x="284" y="195" width="56" height="28" rx="6" fill="#FAEEDA" stroke="#EF9F27" stroke-width="1.5"/>
+        <text x="312" y="209" text-anchor="middle" dominant-baseline="central" style="fill:#633806;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif">YCZ</text>
+        <!-- Inconsistency badge -->
+        <rect x="328" y="196" width="10" height="10" rx="3" fill="#E24B4A"/>
+        <text x="333" y="201" text-anchor="middle" dominant-baseline="central" style="fill:white;font-size:7px;font-weight:700;font-family:'DM Sans',sans-serif">!</text>
+      </g>
+
+      <!-- N8 valve — OUT OF SCOPE -->
+      <g class="node" onclick="showDetail('n8')">
+        <rect x="284" y="290" width="56" height="28" rx="6" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="1"/>
+        <text x="312" y="304" text-anchor="middle" dominant-baseline="central" style="fill:#444441;font-size:11px;font-family:'DM Sans',sans-serif">N8</text>
+      </g>
+
+      <!-- PL1AM1 — CRITICAL PATH -->
+      <g class="node" onclick="showDetail('pl1am1')">
+        <rect x="360" y="310" width="110" height="50" rx="8" fill="#FCEBEB" stroke="#E24B4A" stroke-width="2.5"/>
+        <text x="415" y="333" text-anchor="middle" dominant-baseline="central" style="fill:#791F1F;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif">PL1AM1</text>
+        <text x="415" y="350" text-anchor="middle" style="fill:#A32D2D;font-size:10px;font-family:'DM Sans',sans-serif">Pump motor A</text>
+        <!-- Inconsistency badge -->
+        <rect x="430" y="313" width="34" height="16" rx="4" fill="#E24B4A"/>
+        <text x="447" y="321" text-anchor="middle" dominant-baseline="central" style="fill:white;font-size:9px;font-weight:700;font-family:'DM Sans',sans-serif">! VT</text>
+      </g>
+      <!-- Motor M circle -->
+      <circle cx="487" cy="335" r="16" fill="#FCEBEB" stroke="#E24B4A" stroke-width="2"/>
+      <text x="487" y="335" text-anchor="middle" dominant-baseline="central" style="fill:#791F1F;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif">M</text>
+      <!-- PL1A label below -->
+      <text x="415" y="375" text-anchor="middle" style="fill:#A32D2D;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif">PL1A</text>
+
+      <!-- PL1BM1 — SCOPE FROZEN -->
+      <g class="node" onclick="showDetail('pl1bm1')">
+        <rect x="520" y="310" width="110" height="50" rx="8" fill="#EAF3DE" stroke="#639922" stroke-width="2"/>
+        <text x="575" y="333" text-anchor="middle" dominant-baseline="central" style="fill:#27500A;font-size:13px;font-weight:700;font-family:'DM Sans',sans-serif">PL1BM1</text>
+        <text x="575" y="350" text-anchor="middle" style="fill:#3B6D11;font-size:10px;font-family:'DM Sans',sans-serif">Pump motor B</text>
+      </g>
+      <circle cx="645" cy="335" r="16" fill="#EAF3DE" stroke="#639922" stroke-width="2"/>
+      <text x="645" y="335" text-anchor="middle" dominant-baseline="central" style="fill:#27500A;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif">M</text>
+      <text x="575" y="375" text-anchor="middle" style="fill:#3B6D11;font-size:11px;font-weight:600;font-family:'DM Sans',sans-serif">PL1B</text>
+
+      <!-- Drawing reference -->
+      <text x="845" y="442" text-anchor="end" style="fill:#B4B2A9;font-size:9px;font-family:'DM Mono',monospace">P&ID Ref: 012340-500-40WE02D2N01 Rev.3 · Click equipment to inspect</text>
+    </svg>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div id="detail-panel" class="detail-panel">
+    <div class="dp-header">
+      <div>
+        <div class="dp-title" id="dp-title">—</div>
+        <div id="dp-status" style="margin-top:6px"></div>
+      </div>
+      <button class="dp-close" onclick="closeDetail()">Close ✕</button>
+    </div>
+    <div class="dp-grid" id="dp-grid"></div>
+    <div id="dp-inc"></div>
+    <div class="coord-note" id="dp-coord"></div>
+  </div>
+
+  <!-- INCONSISTENCY LOG -->
+  <div class="section-lbl">Field walk-down inconsistency log — daily report to Lead Planner</div>
+  <div class="table-card">
+    <div class="table-header">
+      <div class="table-header-title">P&ID vs. Field reality — 5 inconsistencies identified</div>
+      <div style="font-size:12px;color:var(--text-hint)">Total additional scope: +13.5h &nbsp;·&nbsp; High risk: 2</div>
+    </div>
+    <table class="inc-table">
+      <thead>
+        <tr>
+          <th>Tag</th>
+          <th>P&ID shows</th>
+          <th>Field reality</th>
+          <th>Risk level</th>
+          <th>Schedule impact</th>
+          <th>Coordinator action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="tag-cell">KO1</td>
+          <td>Manual gate valve DN50 on feed line</td>
+          <td>MOV (motor-operated valve) with actuator installed</td>
+          <td class="risk-high">HIGH — LOTO</td>
+          <td>+4h electrical isolation</td>
+          <td>Update master scope; notify Electrical for LOTO adjustment. NCR raised.</td>
+        </tr>
+        <tr>
+          <td class="tag-cell">YCZ</td>
+          <td>Manual control valve — no positioner</td>
+          <td>Automated positioner installed — not in work order</td>
+          <td class="risk-med">MEDIUM</td>
+          <td>+2h instrument check</td>
+          <td>Add instrument tech to scope; update WO-4401. RFI-023 submitted.</td>
+        </tr>
+        <tr>
+          <td class="tag-cell">PL1AM1</td>
+          <td>Standard coupling — no vibration sensor</td>
+          <td>Vibration sensor VT-101 added since last turnaround</td>
+          <td class="risk-high">HIGH — Safety</td>
+          <td>+6h scope addition</td>
+          <td>Add VT-101 calibration to WO-4401. Alert Lead Planner immediately. Critical path impact.</td>
+        </tr>
+        <tr>
+          <td class="tag-cell">FIR-02</td>
+          <td>Flow indicator — no control function</td>
+          <td>Control loop added — now FIC (flow indicator controller)</td>
+          <td class="risk-med">MEDIUM</td>
+          <td>+1.5h calibration check</td>
+          <td>Update P&ID revision request. Add to instrument scope list. No critical path impact.</td>
+        </tr>
+        <tr>
+          <td class="tag-cell">SB1 / N3</td>
+          <td>Nozzle N3 shown as capped / closed</td>
+          <td>Nozzle connected to new sampling line — active</td>
+          <td class="risk-low">LOW</td>
+          <td>No change to scope</td>
+          <td>Document in as-built register. No scope impact. Confirm during 20.03 field walk.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div>
+      Total inconsistencies: <strong>5</strong> &nbsp;·&nbsp;
+      High risk: <strong>2</strong> &nbsp;·&nbsp;
+      Additional hours identified: <strong>+13.5h</strong> &nbsp;·&nbsp;
+      Report date: <strong>19.03.2026</strong>
+    </div>
+    <div class="footer-credit">Sazzad Khan | BI Analyst &nbsp;·&nbsp; Scopekoordinator Candidate &nbsp;·&nbsp; IMG Tec / BP Gelsenkirchen</div>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+const equipment = {
+  ko1: {
+    title: "KO1 — Distillation column",
+    status: "critical", statusLabel: "Critical path — restart sequence priority",
+    fields: [
+      {l:"Tag number", v:"KO1 / 012340-500-40WE02D2N01"},
+      {l:"Equipment type", v:"Vertical distillation column"},
+      {l:"SAP work order", v:"WO-4398 / PM01"},
+      {l:"Estimated man-hours", v:"42h"},
+      {l:"Scope description", v:"Full internal inspection, tray replacement zones 3–5, vessel nozzle check"},
+      {l:"P&ID revision", v:"Rev.3 — pending as-built update"},
+      {l:"Isolation status", v:"LOTO plan requires update (MOV found)"},
+      {l:"Lead planner", v:"Assigned — scope frozen pending LOTO revision"},
+    ],
+    inc: true, incClass: "inc-flag-high",
+    incText: "FLAG (HIGH): P&ID Rev.3 shows manual gate valve DN50 on feed line. Field walk-down confirmed motorised valve (MOV) with electrical actuator installed. LOTO plan must be updated before isolation. +4h estimated. NCR-KO1-001 raised.",
+    coord: "Coordinator action: Raise NCR for KO1 feed valve immediately. Notify Electrical team — LOTO isolation plan must be revised before work begins. Update master scope list today. Brief Lead Planner at morning meeting 20.03."
+  },
+  sb1: {
+    title: "SB1 — Separator / overhead receiver",
+    status: "pending", statusLabel: "Inspection pending — Vor-Ort-Begehung scheduled 20.03.2026",
+    fields: [
+      {l:"Tag number", v:"SB1 / 012349-50-10HE02"},
+      {l:"Equipment type", v:"Separator / storage vessel"},
+      {l:"SAP work order", v:"WO-4403 / PM02"},
+      {l:"Estimated man-hours", v:"18h"},
+      {l:"Scope description", v:"Nozzle inspection N1–N5, internal coating check, level instrument calibration"},
+      {l:"P&ID revision", v:"Rev.3"},
+      {l:"Isolation status", v:"Isolation plan approved and signed"},
+      {l:"Vor-Ort-Begehung", v:"SCHEDULED — 20.03.2026 09:00"},
+    ],
+    inc: false,
+    coord: "Coordinator action: Confirm nozzle N3 active sampling line status during tomorrow's field walk. Document in as-built register. Pre-check AR-01 instrument before walk-down. No scope changes anticipated."
+  },
+  pl1am1: {
+    title: "PL1AM1 — Pump A motor assembly",
+    status: "critical", statusLabel: "Critical path — safety flag VT-101 active",
+    fields: [
+      {l:"Tag number", v:"PL1AM1 / 012350-40-60CA05D1F01"},
+      {l:"Equipment type", v:"Centrifugal pump + motor (duty pump)"},
+      {l:"SAP work order", v:"WO-4401 / PM03"},
+      {l:"Estimated man-hours", v:"28h (+6h VT-101)"},
+      {l:"Scope description", v:"Mechanical seal replacement, bearing inspection, coupling alignment, VT-101 calibration (added)"},
+      {l:"P&ID revision", v:"Rev.3 — VT-101 sensor not yet shown on drawing"},
+      {l:"Isolation status", v:"LOTO pending — vibration sensor circuit to be added"},
+      {l:"Restart priority", v:"HIGH — PL1A on critical restart path"},
+    ],
+    inc: true, incClass: "inc-flag-high",
+    incText: "FLAG (HIGH / SAFETY): Vibration sensor VT-101 found on Pump A motor housing — not in original scope, not shown on P&ID Rev.3. Safety-relevant: sensor circuit must be included in LOTO. +6h scope addition. Lead Planner alerted.",
+    coord: "Coordinator action: Add VT-101 calibration to WO-4401 immediately. Notify Lead Planner — this is on the critical restart path. Cross-check PL1BM1 (Pump B) for same sensor during field walk. Electrical team to update LOTO drawing."
+  },
+  pl1bm1: {
+    title: "PL1BM1 — Pump B motor assembly",
+    status: "ready", statusLabel: "Scope frozen — ready for execution",
+    fields: [
+      {l:"Tag number", v:"PL1BM1 / 012346-40-40CA05D1F01"},
+      {l:"Equipment type", v:"Centrifugal pump + motor (standby pump)"},
+      {l:"SAP work order", v:"WO-4402 / PM03"},
+      {l:"Estimated man-hours", v:"24h"},
+      {l:"Scope description", v:"Mechanical seal check, bearing lubrication, coupling alignment, motor insulation test"},
+      {l:"P&ID revision", v:"Rev.3 — confirmed field match"},
+      {l:"Isolation status", v:"LOTO plan approved and signed"},
+      {l:"Priority", v:"Standard — standby pump, not on critical path"},
+    ],
+    inc: false,
+    coord: "Coordinator action: Scope frozen and LOTO approved. Cross-check VT-101 presence on Pump B during field walk (ref: PL1AM1 flag). Confirm motor insulation test kit availability with Electrical team."
+  },
+  fir02: {
+    title: "FIR-02 — Flow indicator (overhead line)",
+    status: "pending", statusLabel: "Inspection pending — control loop change identified",
+    fields: [
+      {l:"Tag number", v:"FIR-02 / overhead line KO1→SB1"},
+      {l:"Equipment type", v:"Flow indicator / controller (upgraded)"},
+      {l:"SAP work order", v:"WO-4404 — being updated"},
+      {l:"Estimated man-hours", v:"7.5h (revised +1.5h)"},
+      {l:"Scope description", v:"Calibration check, flow element inspection, control loop function test (added)"},
+      {l:"P&ID revision", v:"Rev.3 — revision request raised (RFI-024)"},
+      {l:"Isolation status", v:"Standard process isolation — no change"},
+      {l:"Vor-Ort-Begehung", v:"COMPLETED — 19.03.2026"},
+    ],
+    inc: true, incClass: "inc-flag-med",
+    incText: "FLAG (MEDIUM): FIR-02 shown as indicator only on P&ID Rev.3. Field confirmed control loop (FIC) with controller added. Calibration scope must include control function test. +1.5h added. RFI-024 submitted.",
+    coord: "Coordinator action: Update WO-4404 to include FIC control loop calibration. P&ID revision request RFI-024 submitted. No critical path impact. Notify instrument technician."
+  },
+  n8: {
+    title: "N8 — Manual isolation valve",
+    status: "outscope", statusLabel: "Out of scope — passive monitoring only",
+    fields: [
+      {l:"Tag number", v:"N8 / KO1 column"},
+      {l:"Equipment type", v:"Manual isolation valve"},
+      {l:"SAP work order", v:"None — out of scope"},
+      {l:"Estimated man-hours", v:"0h"},
+      {l:"Scope description", v:"No maintenance planned this turnaround"},
+      {l:"P&ID revision", v:"Rev.3 — confirmed match"},
+      {l:"Isolation status", v:"Closed as per passive isolation list"},
+      {l:"Monitoring note", v:"Check for leakage during shutdown phase"},
+    ],
+    inc: false,
+    coord: "Coordinator action: Confirm valve is on the passive monitoring checklist. No scope change required. Document in walk-down log if any leakage observed during shutdown phase."
+  },
+  ycz: {
+    title: "YCZ — Control valve with positioner",
+    status: "pending", statusLabel: "Inspection pending — positioner discrepancy found",
+    fields: [
+      {l:"Tag number", v:"YCZ / 012350-40-60CA05D1F01"},
+      {l:"Equipment type", v:"Automated control valve with positioner"},
+      {l:"SAP work order", v:"WO-4401 — being updated"},
+      {l:"Estimated man-hours", v:"8h (revised from 6h)"},
+      {l:"Scope description", v:"Positioner calibration, valve seat inspection, actuator check (added)"},
+      {l:"P&ID revision", v:"Rev.3 — update request RFI-023 raised"},
+      {l:"Isolation status", v:"Isolation plan being revised"},
+      {l:"Vor-Ort-Begehung", v:"COMPLETED — 19.03.2026"},
+    ],
+    inc: true, incClass: "inc-flag-med",
+    incText: "FLAG (MEDIUM): YCZ tagged as manual valve on P&ID Rev.3. Field walk-down confirmed automated positioner installed. Work order WO-4401 being updated to include positioner calibration. +2h scope addition. RFI-023 submitted.",
+    coord: "Coordinator action: P&ID revision request RFI-023 submitted. WO-4401 updated. Instrument technician assigned for positioner calibration. Brief Lead Planner — minor scope addition, no critical path impact."
+  }
+};
+
+const statusClass = {critical:"s-critical", pending:"s-pending", ready:"s-ready", outscope:"s-outscope"};
+
+function showDetail(id) {
+  const e = equipment[id];
+  if (!e) return;
+  document.getElementById('dp-title').textContent = e.title;
+  document.getElementById('dp-status').innerHTML = `<span class="status-pill ${statusClass[e.status]}">${e.statusLabel}</span>`;
+  const grid = document.getElementById('dp-grid');
+  grid.innerHTML = '';
+  e.fields.forEach(f => {
+    const d = document.createElement('div');
+    d.className = 'dp-field';
+    d.innerHTML = `<div class="dp-field-lbl">${f.l}</div><div class="dp-field-val">${f.v}</div>`;
+    grid.appendChild(d);
+  });
+  const incDiv = document.getElementById('dp-inc');
+  if (e.inc) {
+    incDiv.innerHTML = `<div class="inc-flag ${e.incClass}" style="margin-bottom:10px"><strong>Inconsistency flag:</strong> ${e.incText}</div>`;
+  } else {
+    incDiv.innerHTML = '';
+  }
+  document.getElementById('dp-coord').innerHTML = `<strong>Coordinator action:</strong> ${e.coord}`;
+  const panel = document.getElementById('detail-panel');
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+}
+</script>
+</body>
+</html>
