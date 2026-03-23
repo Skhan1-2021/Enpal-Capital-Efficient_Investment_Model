@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Turnaround Scope Coordination Framework — BP Gelsenkirchen</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0f0f0e;
+  --ink2:#3a3936;
+  --ink3:#7a7874;
+  --ink4:#b0ada8;
+  --paper:#fafaf8;
+  --paper2:#f3f2ef;
+  --paper3:#eceae5;
+  --border:#e0ddd7;
+  --red:#c0392b;
+  --red-l:#fdf0ee;
+  --red-m:#f5c3be;
+  --amber:#b06a00;
+  --amber-l:#fdf6ec;
+  --amber-m:#f5d8a0;
+  --green:#1a6e4a;
+  --green-l:#edf7f2;
+  --green-m:#a8dfc5;
+  --blue:#1a4e8a;
+  --blue-l:#eef4fc;
+  --blue-m:#a3c4f0;
+  --purple:#4a3490;
+  --purple-l:#f3f1fc;
+  --sans:'DM Sans',sans-serif;
+  --mono:'DM Mono',monospace;
+  --display:'Playfair Display',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:14px;line-height:1.6}
+
+/* ── COVER ── */
+.cover{background:var(--ink);color:var(--paper);padding:56px 60px 48px;position:relative;overflow:hidden}
+.cover::before{content:'';position:absolute;top:0;right:0;width:50%;height:100%;background:repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 48px),repeating-linear-gradient(0deg,rgba(255,255,255,.015) 0,rgba(255,255,255,.015) 1px,transparent 1px,transparent 48px)}
+.cover-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.cover-eyebrow::before{content:'';width:32px;height:1px;background:var(--red)}
+.cover-title{font-family:var(--display);font-size:46px;font-weight:900;line-height:1.08;margin-bottom:8px}
+.cover-title em{color:#e06050;font-style:normal}
+.cover-subtitle{font-size:15px;color:rgba(255,255,255,.55);margin-bottom:40px;font-weight:300}
+.cover-meta{display:flex;gap:32px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,.1);padding-top:24px}
+.cm-item{font-family:var(--mono);font-size:11px}
+.cm-label{color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
+.cm-val{color:rgba(255,255,255,.85)}
+.cover-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.08);border-radius:10px;overflow:hidden;margin-top:36px}
+.ckpi{background:rgba(255,255,255,.04);padding:16px 20px;text-align:center}
+.ckpi-val{font-family:var(--mono);font-size:26px;font-weight:500;margin-bottom:4px}
+.ckpi-lbl{font-size:11px;color:rgba(255,255,255,.4);line-height:1.4}
+
+/* ── NAV ── */
+.nav{background:#fff;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;display:flex;overflow-x:auto;padding:0 40px}
+.nb{padding:14px 20px;font-size:12px;font-weight:500;color:var(--ink3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;font-family:var(--sans);letter-spacing:.01em;transition:all .15s}
+.nb:hover{color:var(--ink)}
+.nb.on{color:var(--red);border-bottom-color:var(--red)}
+
+/* ── LAYOUT ── */
+.main{max-width:1080px;margin:0 auto;padding:40px 40px 100px}
+.panel{display:none}.panel.on{display:block}
+
+/* ── SECTION HEADINGS ── */
+.sh{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink4);margin:2rem 0 1rem;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sh-num{font-size:18px;font-weight:500;color:var(--border);font-family:var(--display)}
+.section-title{font-family:var(--display);font-size:22px;font-weight:700;color:var(--ink);margin-bottom:6px}
+.section-lead{font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:20px;max-width:820px}
+
+/* ── PHASE STRIP ── */
+.phase-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px}
+.ps-item{background:#fff;padding:18px 16px;position:relative}
+.ps-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.ps1::before{background:var(--red)}
+.ps2::before{background:var(--amber)}
+.ps3::before{background:var(--blue)}
+.ps4::before{background:var(--green)}
+.ps5::before{background:var(--purple)}
+.ps-n{font-family:var(--mono);font-size:9px;color:var(--ink4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.ps-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.35}
+.ps-body{font-size:11px;color:var(--ink3);line-height:1.55}
+.ps-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.ptag{font-size:9px;font-family:var(--mono);padding:2px 6px;border-radius:3px;background:var(--paper2);color:var(--ink3)}
+
+/* ── INFO BOX ── */
+.ibox{background:#fff;border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:12px}
+.ibox-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.ibox-stripe{width:3px;height:16px;border-radius:2px;flex-shrink:0}
+.ibox-body{font-size:12px;color:var(--ink2);line-height:1.75}
+.ibox-body b{color:var(--ink);font-weight:600}
+.ibox-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.ic-box{background:var(--paper2);border-radius:7px;padding:11px 13px}
+.ic-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px}
+.ic-txt{font-size:11px;color:var(--ink2);line-height:1.6}
+
+/* ── TABLES ── */
+.tbl-wrap{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px}
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink4);background:var(--paper2);padding:9px 14px;text-align:left;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.55;color:var(--ink2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--paper)}
+.tt{font-family:var(--mono);font-weight:500;font-size:11px}
+.tt-r{color:var(--red)}
+.tt-a{color:var(--amber)}
+.tt-g{color:var(--green)}
+.tt-b{color:var(--blue)}
+.tt-p{color:var(--purple)}
+.pill{display:inline-block;font-size:9px;font-family:var(--mono);padding:2px 7px;border-radius:3px;font-weight:500}
+.pill-h{background:var(--red-l);color:var(--red)}
+.pill-m{background:var(--amber-l);color:var(--amber)}
+.pill-l{background:var(--green-l);color:var(--green)}
+
+/* ── LOOP DIAGRAM ── */
+.loop-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}
+.lb{font-size:11px;font-family:var(--mono);padding:6px 14px;border-radius:5px;border:1px solid;font-weight:500}
+.lb-s{background:var(--blue-l);border-color:var(--blue-m);color:var(--blue)}
+.lb-c{background:var(--amber-l);border-color:var(--amber-m);color:var(--amber)}
+.lb-a{background:var(--green-l);border-color:var(--green-m);color:var(--green)}
+.la{color:var(--ink4);font-size:18px;font-family:var(--mono)}
+.loop-note{font-size:11px;color:var(--ink3);background:var(--paper2);border-radius:5px;padding:7px 11px;margin-top:6px;line-height:1.6}
+.loop-note b{color:var(--ink);font-weight:600}
+
+/* ── LOTO CHAIN ── */
+.loto-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.lc{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.lc-top{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.lc-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:500;flex-shrink:0}
+.lc-title{font-size:12px;font-weight:600;color:var(--ink)}
+.lc-body{font-size:11px;color:var(--ink3);line-height:1.6}
+
+/* ── ENERGY GRID ── */
+.energy-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.ec{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid}
+.ec-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.ec-body{font-size:11px;color:var(--ink3);line-height:1.6;margin-bottom:7px}
+.ec-sap{font-family:var(--mono);font-size:10px;padding:4px 8px;border-radius:3px;display:inline-block}
+
+/* ── PERMIT CARDS ── */
+.permit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px}
+.pc{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.pc-badge{font-size:9px;font-family:var(--mono);padding:3px 8px;border-radius:3px;margin-bottom:8px;display:inline-block;font-weight:500}
+.pc-name{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.pc-desc{font-size:11px;color:var(--ink3);line-height:1.6;margin-bottom:6px}
+.pc-coord{font-size:10px;font-family:var(--mono);color:var(--ink4);border-top:1px solid var(--border);padding-top:6px;margin-top:6px}
+
+/* ── GAP CALLOUT ── */
+.gap{border-left:3px solid var(--red);background:var(--red-l);border-radius:0 7px 7px 0;padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--ink2);line-height:1.65}
+.gap b{color:var(--red);font-weight:600}
+.gap-amber{border-left-color:var(--amber);background:var(--amber-l)}
+.gap-amber b{color:var(--amber)}
+.gap-green{border-left-color:var(--green);background:var(--green-l)}
+.gap-green b{color:var(--green)}
+
+/* ── VALUE CARDS ── */
+.val-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-bottom:16px}
+.vc{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px;border-top:3px solid}
+.vc-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.vc-body{font-size:11px;color:var(--ink3);line-height:1.6}
+.vc-metric{font-family:var(--mono);font-size:11px;margin-top:7px;font-weight:500}
+
+/* ── DAILY CHECKLIST ── */
+.cl-section{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:10px}
+.cls-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.cls-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.cls-title{font-size:13px;font-weight:600;color:var(--ink);flex:1}
+.cls-bar{width:90px;height:3px;background:var(--paper3);border-radius:2px}
+.cls-fill{height:3px;border-radius:2px;transition:width .4s}
+.cls-score{font-family:var(--mono);font-size:11px;color:var(--ink4);white-space:nowrap}
+.cl-list{display:flex;flex-direction:column;gap:4px}
+.ci{display:flex;align-items:flex-start;gap:8px;cursor:pointer;padding:4px 6px;border-radius:5px;transition:background .1s}
+.ci:hover{background:var(--paper2)}
+.ci-box{width:16px;height:16px;border:1px solid var(--border);border-radius:3px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;transition:all .15s}
+.ci-box.done{background:var(--green);border-color:var(--green);color:#fff}
+.ci-en{font-size:12px;color:var(--ink2);line-height:1.5}
+.ci-en.done{color:var(--ink4);text-decoration:line-through}
+.ci-de{font-size:10px;color:var(--amber);font-style:italic;margin-top:1px}
+
+/* ── BRIDGE VISUAL ── */
+.bridge{display:grid;grid-template-columns:1fr 40px 1fr;gap:12px;align-items:center;margin-bottom:12px}
+.bs{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.bs-lbl{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+.bs-item{font-size:12px;color:var(--ink2);padding:3px 0;line-height:1.4;border-bottom:1px solid var(--paper3)}
+.bs-item:last-child{border-bottom:none}
+.bs-item span{font-weight:500;color:var(--ink)}
+.bridge-arr{text-align:center;font-size:20px;color:var(--ink4)}
+
+/* ── SAP CARDS ── */
+.sap-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.sc{background:#fff;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.sc-term{font-family:var(--mono);font-size:10px;color:var(--blue);font-weight:500;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em}
+.sc-real{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.sc-role{font-size:11px;color:var(--ink3);line-height:1.6}
+
+/* ── FOOTER ── */
+.footer{background:var(--ink);color:rgba(255,255,255,.5);font-family:var(--mono);font-size:10px;padding:16px 40px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+
+@media(max-width:700px){
+  .cover{padding:32px 24px}
+  .cover-title{font-size:28px}
+  .cover-kpis{grid-template-columns:repeat(2,1fr)}
+  .main{padding:24px 16px 80px}
+  .nav{padding:0 16px}
+  .phase-strip{grid-template-columns:1fr}
+  .loto-grid,.energy-grid{grid-template-columns:1fr 1fr}
+  .bridge{grid-template-columns:1fr;gap:8px}
+  .bridge-arr{transform:rotate(90deg)}
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Scope Coordination Framework &nbsp;·&nbsp; Petrochemical Turnaround</div>
+  <div class="cover-title">Bridging the<br><em>P&ID Brain</em><br>to SAP Execution</div>
+  <div class="cover-subtitle">A complete data-driven coordination framework for safe and on-schedule petrochemical shutdowns</div>
+  <div class="cover-kpis">
+    <div class="ckpi"><div class="ckpi-val" style="color:#e06050">Zero</div><div class="ckpi-lbl">Uncontrolled energy sources during shutdown</div></div>
+    <div class="ckpi"><div class="ckpi-val" style="color:#d4a43a">100%</div><div class="ckpi-lbl">P&ID-to-SAP data alignment before execution</div></div>
+    <div class="ckpi"><div class="ckpi-val" style="color:#5ab890">+13.5h</div><div class="ckpi-lbl">Hidden scope identified pre-execution at KO1</div></div>
+    <div class="ckpi"><div class="ckpi-val" style="color:#6aace0">5</div><div class="ckpi-lbl">Critical data inconsistencies resolved Day 1</div></div>
+  </div>
+  <div class="cover-meta">
+    <div class="cm-item"><div class="cm-label">Prepared by</div><div class="cm-val">Sazzad Khan — Scopekoordinator Candidate</div></div>
+    <div class="cm-item"><div class="cm-label">Client</div><div class="cm-val">BP Gelsenkirchen · IMG Tec GmbH</div></div>
+    <div class="cm-item"><div class="cm-label">Unit</div><div class="cm-val">KO1 Distillation · SB1 · PL1A/B</div></div>
+    <div class="cm-item"><div class="cm-label">Year</div><div class="cm-val">2026</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nb on" onclick="show('overview')">Overview</button>
+  <button class="nb" onclick="show('pid')">P&ID & Control Loops</button>
+  <button class="nb" onclick="show('loto')">LOTO & Isolation</button>
+  <button class="nb" onclick="show('hazard')">Hazard & Energy</button>
+  <button class="nb" onclick="show('permit')">Permit & Process</button>
+  <button class="nb" onclick="show('sap')">SAP PM Bridge</button>
+  <button class="nb" onclick="show('checklist')">Daily Checklist</button>
+</div>
+
+<div class="main">
+
+<!-- ═══ TAB 1: OVERVIEW ═══ -->
+<div id="tab-overview" class="panel on">
+
+  <div class="sh"><span class="sh-num">01</span>The Scope Coordinator's mission</div>
+  <div class="section-title">From P&ID Paper to Safe Physical Work</div>
+  <div class="section-lead">Every bolt opened in a petrochemical turnaround must be backed by complete, accurate data — matching the physical plant reality to the P&ID drawing and the SAP PM work management system. The Scope Coordinator is the person who ensures that alignment exists before any person enters the field. One data gap can mean a forgotten energy source, a broken control loop on restart, or a fatality.</div>
+
+  <div class="phase-strip">
+    <div class="ps-item ps1">
+      <div class="ps-n">Phase 01</div>
+      <div class="ps-title">P&ID Analysis & Loop Identification</div>
+      <div class="ps-body">Read every R&I-Fließbild. Identify all control loops: sensor → controller → final element. Map every instrument tag to SAP PM Equipment Master. Flag any tag with no SAP record.</div>
+      <div class="ps-tags"><span class="ptag">LIC / FIR / TR</span><span class="ptag">Tag register</span><span class="ptag">Loop map</span></div>
+    </div>
+    <div class="ps-item ps2">
+      <div class="ps-n">Phase 02</div>
+      <div class="ps-title">Isolation Planning & LOTO Development</div>
+      <div class="ps-body">Trace every energy source per equipment: fluid, electrical, pneumatic, thermal. Build isolation list in SAP WCM. Identify blind/spade requirements. Verify Double Block & Bleed positions.</div>
+      <div class="ps-tags"><span class="ptag">LOTO</span><span class="ptag">DBB</span><span class="ptag">Spade list</span></div>
+    </div>
+    <div class="ps-item ps3">
+      <div class="ps-n">Phase 03</div>
+      <div class="ps-title">Hazard & Energy Control</div>
+      <div class="ps-body">Identify all 6 hazardous energy categories per item. Confirm gas-freeing prerequisites for vessel entry. Flag SIF and PSV as mandatory scope. Verify LEL/OEL certificates in SAP WOs.</div>
+      <div class="ps-tags"><span class="ptag">6 energy types</span><span class="ptag">LEL/OEL</span><span class="ptag">Gas-free cert</span></div>
+    </div>
+    <div class="ps-item ps4">
+      <div class="ps-n">Phase 04</div>
+      <div class="ps-title">Permit Coordination</div>
+      <div class="ps-body">Verify every SAP WO has correct permit type. Identify SIMOPS conflicts — overlapping WOs at adjacent FuncLocs. Coordinate Hot Work / Confined Space / Cold Work permit sequences.</div>
+      <div class="ps-tags"><span class="ptag">PTW</span><span class="ptag">SIMOPS</span><span class="ptag">Hot Work</span></div>
+    </div>
+    <div class="ps-item ps5">
+      <div class="ps-n">Phase 05</div>
+      <div class="ps-title">Pre-Restart Safety Gate</div>
+      <div class="ps-body">All WOs at TECO. Complete isolation removal log — every lock accounted for. All permits formally closed. Blind/spade removal register confirmed. Loop commissioning verified. Restart cleared.</div>
+      <div class="ps-tags"><span class="ptag">TECO check</span><span class="ptag">Permit closure</span><span class="ptag">Blind register</span></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>What I deliver to BP Management</div>
+  <div class="val-grid">
+    <div class="vc" style="border-top-color:var(--red)">
+      <div class="vc-title">Data Safety Bridge</div>
+      <div class="vc-body">Every LOTO plan and work permit verified against current P&ID revision. No energy source is uncontrolled. No tag mismatch reaches the field team.</div>
+      <div class="vc-metric" style="color:var(--red)">Zero uncontrolled energy sources</div>
+    </div>
+    <div class="vc" style="border-top-color:var(--amber)">
+      <div class="vc-title">Hidden Scope Detection</div>
+      <div class="vc-body">Field walk-downs cross-referenced against SAP PM and P&ID. New equipment not on drawings flagged before execution — not discovered during it.</div>
+      <div class="vc-metric" style="color:var(--amber)">+13.5h hidden scope found pre-execution</div>
+    </div>
+    <div class="vc" style="border-top-color:var(--green)">
+      <div class="vc-title">Loop Integrity Assurance</div>
+      <div class="vc-body">Every control loop has all 3 components — sensor, controller, final element — verified in SAP PM. No loop left half-commissioned on restart day.</div>
+      <div class="vc-metric" style="color:var(--green)">3-component rule applied to every loop</div>
+    </div>
+    <div class="vc" style="border-top-color:var(--blue)">
+      <div class="vc-title">SIMOPS Risk Prevention</div>
+      <div class="vc-body">SAP PM schedule reviewed for overlapping WOs at adjacent Functional Locations. Conflicts flagged before permit issuance — never during live execution.</div>
+      <div class="vc-metric" style="color:var(--blue)">100% SIMOPS check before work release</div>
+    </div>
+    <div class="vc" style="border-top-color:var(--purple)">
+      <div class="vc-title">Structured Planner Support</div>
+      <div class="vc-body">Daily briefing: Tag / Risk / Hours / Action. Structured escalation for every HIGH-risk finding. All decisions documented in writing — no verbal-only safety agreements.</div>
+      <div class="vc-metric" style="color:var(--purple)">Written report to Lead Planner by 17:00 daily</div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">03</span>Turnaround lifecycle — what TAR means</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--blue)"></div>What is a Turnaround (TAR)?</div>
+    <div class="ibox-body">A Turnaround is the planned, total shutdown of a petrochemical unit for maintenance, inspection, and upgrades that are impossible while the plant is running. Think of it as a Formula 1 pit stop — the plant stops completely so a large coordinated team can perform intense, high-speed work to ensure the plant runs safely for the next operational period.<br><br>Every hour the plant is down costs <b>hundreds of thousands of euros in lost production</b>. The Scope Coordinator's data quality directly controls how long the plant stays offline.</div>
+    <div class="ibox-cols">
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--red)">Why shutdown is necessary</div><div class="ic-txt">Regulatory inspection of pressure vessels · Worn part replacement · Control loop recalibration · Catalyst replacement · Debottlenecking upgrades</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--amber)">Coordinator's TAR value</div><div class="ic-txt">Wrong P&ID data = wrong parts ordered · Hidden scope = shutdown extends · Missing LOTO = fatality risk · Bad loop data = failed restart</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--blue)">TAR planning phases</div><div class="ic-txt">Long-lead planning (12–18 months) · Scope freeze (3–6 months) · Execution preparation (1–4 weeks) · Execution · Restart</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--green)">Coordinator's daily role</div><div class="ic-txt">P&ID walk-down verification · SAP PM data cross-check · LOTO gap identification · Daily Lead Planner briefing · Scope change management</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 2: P&ID & LOOPS ═══ -->
+<div id="tab-pid" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>Reading the P&ID — instrument tag system</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--amber)"></div>How to decode every instrument tag on a P&ID</div>
+    <div class="ibox-body">Every instrument tag follows the ISA 5.1 standard. The <b>first letter = measured variable</b>. Succeeding letters = the function performed. As Scope Coordinator, I read every tag and identify which control loop it belongs to — then verify all 3 loop components exist in SAP PM.</div>
+    <div class="ibox-cols">
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--blue)">First letter — variable</div><div class="ic-txt">L = Level<br>F = Flow<br>T = Temperature<br>P = Pressure<br>A = Analyser<br>V = Vibration</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--amber)">Function letters</div><div class="ic-txt">I = Indicate (display)<br>C = Control (regulate)<br>T = Transmit (send signal)<br>R = Record (log value)<br>S = Switch (on/off trigger)<br>V = Valve (final element)</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--green)">KO1 P&ID examples</div><div class="ic-txt">LIC = Level Indicator Controller<br>FIR = Flow Indicator Recorder<br>TR = Temperature Recorder<br>PI = Pressure Indicator<br>AR = Analyser Recorder<br>VT = Vibration Transmitter</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--red)">Line types</div><div class="ic-txt">Solid line = physical pipe<br>Dashed line = signal (4–20mA / pneumatic)<br>Bold dashed = SIS/ESD safety function<br>Triangle symbol = safety instrument<br>Each dashed line = potential LOTO point</div></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>The 3-component rule — coordinator's loop law</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>Breaking a loop: why half-scope causes restart failures</div>
+    <div class="ibox-body">A control loop has exactly 3 components: the sensor that <b>feels</b>, the controller that <b>thinks</b>, and the final element that <b>acts</b>. During a shutdown, maintenance on any one component breaks the entire loop. The Scope Coordinator must ensure all 3 have SAP PM work orders — not just the visible valve.</div>
+  </div>
+
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>LIC-03 — Level control loop · KO1 column bottom · CRITICAL PATH</div>
+    <div class="loop-row">
+      <span class="lb lb-s">LT-03 · Transmitter<br><small>Feels the level</small></span>
+      <span class="la">→</span>
+      <span class="lb lb-c">LIC-03 · Controller<br><small>Thinks / calculates</small></span>
+      <span class="la">→</span>
+      <span class="lb lb-a">LV-03 · Control Valve<br><small>Acts / opens / closes</small></span>
+    </div>
+    <div class="loop-note"><b>Coordinator rule:</b> SAP PM must have 3 separate Maintenance Orders — one per component. If only LV-03 is replaced but LT-03 is not calibrated, the controller receives a wrong signal and the loop fails on restart. One missing MO = one broken loop = one lost production day worth hundreds of thousands of euros.</div>
+  </div>
+
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--amber)"></div>FIR-02 — Flow measurement loop · KO1 overhead → SB1 · DATA INCONSISTENCY FOUND</div>
+    <div class="loop-row">
+      <span class="lb lb-s">FT-02 · Transmitter</span>
+      <span class="la">→</span>
+      <span class="lb lb-c">FIC-02 · Controller ⚠</span>
+      <span class="la">→</span>
+      <span class="lb lb-a">FV-02 · Control Valve</span>
+    </div>
+    <div class="loop-note"><b>Gap found:</b> P&ID Rev.3 shows FIR-02 as indicator only (no control function). Field walk-down confirmed FIC-02 active control loop installed. SAP PM has no work order for the controller. Scope gap: +1.5h. RFI-024 raised. Lead Planner notified same day.</div>
+  </div>
+
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>PL1AM1 — Vibration protection loop · SAFETY CRITICAL — HIGH RISK</div>
+    <div class="loop-row">
+      <span class="lb lb-s">VT-101 · Vibration sensor ⚠<br><small>NOT on P&ID Rev.3</small></span>
+      <span class="la">→</span>
+      <span class="lb lb-c">Vibration monitor</span>
+      <span class="la">→</span>
+      <span class="lb lb-a">Motor trip / alarm</span>
+    </div>
+    <div class="loop-note"><b>Critical finding:</b> VT-101 vibration sensor physically installed on PL1AM1 motor housing — NOT shown on P&ID Rev.3 and NOT in SAP PM Equipment Master. Safety-critical: sensor signal cable is a live electrical energy source that must be in the LOTO plan. Without it: uncontrolled electrical hazard during motor maintenance. Scope addition: +6h. Escalated immediately as HIGH risk.</div>
+  </div>
+
+  <div class="sh"><span class="sh-num">03</span>Safety-critical instruments — always in scope</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Tag</th><th>Full name</th><th>Safety function</th><th>If missing from SAP PM</th><th>Risk</th></tr></thead>
+      <tbody>
+        <tr><td class="tt tt-r">PSV</td><td>Pressure Safety Valve</td><td>Opens automatically on overpressure — prevents vessel rupture, explosion, toxic release</td><td>Add lift test + recertification immediately. Process safety liability if skipped.</td><td><span class="pill pill-h">HIGH</span></td></tr>
+        <tr><td class="tt tt-r">SIF / SIS</td><td>Safety Instrumented Function</td><td>Brings process to safe state when dangerous condition detected. ESD-triggered.</td><td>Always in scope — no exceptions. Cannot be negotiated out to save time.</td><td><span class="pill pill-h">HIGH</span></td></tr>
+        <tr><td class="tt tt-r">ESD valve</td><td>Emergency Shutdown Valve</td><td>Closes automatically on ESD signal to stop process flow instantly</td><td>Stroke test required. Signal line verification in SAP WCM. Add to LOTO list.</td><td><span class="pill pill-h">HIGH</span></td></tr>
+        <tr><td class="tt tt-a">LSH / LSL</td><td>Level Switch High / Low</td><td>Triggers alarm or shutdown on dangerous level exceedance</td><td>Add calibration test. Verify SAP FuncLoc matches field tag exactly.</td><td><span class="pill pill-m">MED</span></td></tr>
+        <tr><td class="tt tt-a">TSH / TSL</td><td>Temperature Switch High / Low</td><td>Triggers alarm or shutdown on dangerous temperature exceedance</td><td>Add calibration test. Verify signal line to ESD tested and intact.</td><td><span class="pill pill-m">MED</span></td></tr>
+        <tr><td class="tt tt-g">PSE</td><td>Pressure Safety Element (rupture disc)</td><td>Single-use bursting disc — last-resort overpressure protection</td><td>Replace if shutdown involves depressurisation. Add to SAP materials list.</td><td><span class="pill pill-m">MED</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 3: LOTO & ISOLATION ═══ -->
+<div id="tab-loto" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>LOTO — the legal foundation of turnaround safety</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>Lockout / Tagout — what it is and why it matters</div>
+    <div class="ibox-body">LOTO is the procedure that ensures all hazardous energy sources connected to equipment are physically isolated and de-energised before any maintenance work begins. In a petrochemical plant, it is a legal requirement — and every piece of equipment in turnaround scope must have an approved LOTO plan before a work order is released to the field.<br><br>As Scope Coordinator, my role is not to write the LOTO procedure — that is the safety engineer's task. My role is to ensure the <b>data behind the LOTO plan is complete and accurate</b>. A LOTO plan is only as safe as the P&ID revision it was based on. If the P&ID is wrong or outdated, the isolation is wrong — and that is a preventable fatality.</div>
+    <div class="ibox-cols">
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--red)">Lockout</div><div class="ic-txt">Physical padlock on isolation point. Energy cannot be restored without removing the lock. Always preferred. Used whenever physically possible on any equipment.</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--amber)">Tagout</div><div class="ic-txt">Warning tag only — "DO NOT OPERATE." Used only when lockout is physically impossible. Provides no physical protection — only a written warning. Coordinator flags all Tagout-only points for review.</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--green)">Try-out (verify)</div><div class="ic-txt">After locking, attempt to start the pump or open the valve — prove isolation actually works. Most critical step: isolation is not confirmed without try-out. Missing in many plans.</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--blue)">Group LOTO</div><div class="ic-txt">Multiple teams on same equipment — each places own lock. Energy cannot be restored until ALL locks removed. Required for SIMOPS scenarios. Coordinator identifies in SAP PM schedule.</div></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>LOTO execution — 6-step coordinator process</div>
+  <div class="loto-grid">
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--red-l);color:var(--red)">01</div><div class="lc-title">P&ID isolation trace</div></div><div class="lc-body">Trace every pipe, signal line, and instrument connected to the equipment on the P&ID. Identify all primary isolation valves, Double Block & Bleed positions, drain and vent points, small-bore instrument connections.</div></div>
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--amber-l);color:var(--amber)">02</div><div class="lc-title">Energy source identification</div></div><div class="lc-body">List all 6 energy categories: process fluid, electrical, pneumatic, hydraulic, mechanical stored energy, thermal. Cross-reference against SAP PM Equipment Master to confirm all are documented.</div></div>
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--blue-l);color:var(--blue)">03</div><div class="lc-title">SAP WCM isolation list</div></div><div class="lc-body">Create isolation list in SAP Work Clearance Management (WCM). Every P&ID valve tag must match a SAP WCM Operational Item. Any mismatch = data inconsistency I must flag immediately to Lead Planner.</div></div>
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--green-l);color:var(--green)">04</div><div class="lc-title">Blind / spade register</div></div><div class="lc-body">For turnaround work, closed valves alone are insufficient. Physical metal blinds (spades) inserted into pipe flanges create absolute barriers. I maintain the blind register — every blind tracked IN and OUT.</div></div>
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--purple-l);color:var(--purple)">05</div><div class="lc-title">Field walk-down verification</div></div><div class="lc-body">Physical plant walk with P&ID and isolation list. Check accessibility — can a technician reach the valve? Check operability — is the valve corroded? Any defect = immediate escalation to Lead Planner.</div></div>
+    <div class="lc"><div class="lc-top"><div class="lc-circle" style="background:var(--paper2);color:var(--ink3)">06</div><div class="lc-title">Pre-restart removal log</div></div><div class="lc-body">After work complete: every lock logged out. Isolation-OUT list compared against Isolation-IN list — every entry accounted for. All blinds removed and registered. No restart until list is 100% verified.</div></div>
+  </div>
+
+  <div class="sh"><span class="sh-num">03</span>Data inconsistency examples — KO1 / PL1A</div>
+  <div class="gap"><b>KO1 feed valve — MOV discovered in field:</b> P&ID Rev.3 shows manual gate valve DN50. SAP WO-4398: manual valve maintenance scope. Field walk-down: MOV (motor-operated valve) with electrical actuator physically installed. LOTO plan must change — electrical isolation now required in addition to mechanical. Risk: HIGH. Impact: +4h scope. NCR raised. Lead Planner notified same day. LOTO updated before work order released.</div>
+  <div class="gap"><b>PL1AM1 vibration sensor — VT-101 missing from P&ID and SAP:</b> P&ID Rev.3 shows no vibration sensor on motor. SAP Equipment Master: no sensor record. Field: VT-101 vibration sensor installed on motor housing with live signal cable. If missed in LOTO plan: electrician works on motor with live signal cable in the work zone — electrical hazard. Risk: HIGH. Impact: +6h scope. LOTO updated. VT-101 added to WO-4401 before release.</div>
+  <div class="gap gap-amber"><b>Double Block & Bleed requirement — KO1 overhead:</b> P&ID shows single block valve on KO1 overhead bypass line. Per BP Hot Work procedures, a single valve isolation is insufficient for hot work within 5 metres. Coordinator recommendation: add manual spade to the flange between the two block valves. Added to blind list. Scope addition: +2h. Lead Planner approved.</div>
+
+  <div class="sh"><span class="sh-num">04</span>DBB — Double Block and Bleed</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--amber)"></div>When a single valve is not enough</div>
+    <div class="ibox-body">For hazardous petrochemical streams — hydrocarbons, H2S, toxic fluids — a single closed valve is insufficient isolation. <b>Double Block & Bleed requires two closed block valves with a vent (bleed) between them.</b> If the first block valve leaks, the bleed drains pressure between the two blocks and makes the leak visible before it reaches the work zone.<br><br>As Scope Coordinator, I identify DBB positions on the P&ID and verify that both block valves AND the bleed valve are listed as separate Operational Items in SAP WCM — not just the primary block valve. Missing the bleed valve from the SAP isolation list is a documented gap I flag immediately.</div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 4: HAZARD & ENERGY ═══ -->
+<div id="tab-hazard" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>The 6 hazardous energy categories</div>
+  <div class="energy-grid">
+    <div class="ec" style="border-top-color:var(--blue)">
+      <div class="ec-title">1. Electrical energy</div>
+      <div class="ec-body">Motor drives, instrumentation power, heat tracing, VFDs, sensor signal cables. Most common in pump/compressor work. PL1AM1 requires isolation at MCC. VT-101 sensor circuit is a separate electrical point not on P&ID Rev.3.</div>
+      <div class="ec-sap" style="background:var(--blue-l);color:var(--blue)">SAP: Motor + separate sensor circuit in WCM</div>
+    </div>
+    <div class="ec" style="border-top-color:var(--red)">
+      <div class="ec-title">2. Process fluid (chemical)</div>
+      <div class="ec-body">Pressurised hydrocarbons, toxic streams, acids, caustics. KO1 column: high-temp, high-pressure distillate. Must be depressurised, drained, purged, gas-freed before any opening. Highest risk category in petrochemical plants.</div>
+      <div class="ec-sap" style="background:var(--red-l);color:var(--red)">SAP: Depressurisation + drain + purge prereqs</div>
+    </div>
+    <div class="ec" style="border-top-color:var(--amber)">
+      <div class="ec-title">3. Thermal energy</div>
+      <div class="ec-body">Hot process fluids, steam, heat-traced lines. KO1 column bottom carries hot bottoms product. Specific cool-down time must appear on the SAP work order as a prerequisite condition before opening.</div>
+      <div class="ec-sap" style="background:var(--amber-l);color:var(--amber)">SAP: Temperature confirmation prereq on WO</div>
+    </div>
+    <div class="ec" style="border-top-color:var(--green)">
+      <div class="ec-title">4. Pneumatic energy</div>
+      <div class="ec-body">Compressed air and instrument gas. Control valve actuators on YCZ and FV-02 are pneumatically driven — must be depressurised before removal. Instrument air header isolation required and listed in WCM.</div>
+      <div class="ec-sap" style="background:var(--green-l);color:var(--green)">SAP: Instrument air isolation in WCM</div>
+    </div>
+    <div class="ec" style="border-top-color:var(--purple)">
+      <div class="ec-title">5. Mechanical stored energy</div>
+      <div class="ec-body">Compressed springs in valve assemblies (relief valve springs, check valves), counterweights, suspended loads. Must be blocked or restrained before removal. Spring-loaded PSVs require special handling procedure.</div>
+      <div class="ec-sap" style="background:var(--purple-l);color:var(--purple)">SAP: Blocking method specified in WO scope</div>
+    </div>
+    <div class="ec" style="border-top-color:var(--ink3)">
+      <div class="ec-title">6. Hydraulic energy</div>
+      <div class="ec-body">Pressurised hydraulic systems in large valve actuators and control systems. Less common but critical for large actuated valve work. Requires formal depressurisation procedure and fluid drain before work begins.</div>
+      <div class="ec-sap" style="background:var(--paper2);color:var(--ink3)">SAP: Hydraulic depressurisation prereq on WO</div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>Gas-freeing — mandatory before KO1 vessel entry</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>Gas-freeing protocol — KO1 distillation column entry</div>
+    <div class="ibox-body">Gas-freeing is the removal of all hazardous vapours from a vessel and replacement with breathable air — below the Lower Explosive Limit (LEL) and Occupational Exposure Limit (OEL). For KO1, this is mandatory because distillation columns contain flammable hydrocarbon vapours and potentially H2S or benzene at toxic concentrations.<br><br><b>Three fatal risks if gas-freeing is skipped:</b><br>1. Flammability — hydrocarbon vapours at 1–5% concentration form explosive mixture with air<br>2. Toxicity — H2S at 50 ppm causes rapid incapacitation; benzene is carcinogenic at any exposure level<br>3. Oxygen deficiency — after nitrogen purge, oxygen content may fall below 19.5% — causing immediate unconsciousness</div>
+    <div class="ibox-cols">
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--red)">Entry thresholds</div><div class="ic-txt">LEL: below 1%<br>O₂: 19.5% – 23.5%<br>H2S: below 1 ppm<br>Benzene: below OEL<br>Measured immediately before entry</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--amber)">Re-test frequency</div><div class="ic-txt">Every 30–60 minutes<br>After every work break<br>After any disturbance inside vessel<br>Authority to halt if LEL rises above 1%</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--green)">SAP WO prerequisites</div><div class="ic-txt">Gas-free certificate field required<br>Who performs the test<br>Which calibrated detector used<br>Re-test frequency documented<br>Sign-off authority named</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--blue)">Coordinator check</div><div class="ic-txt">WO NOT released without cert<br>Certificate number logged in SAP<br>Expiry time noted<br>Re-test required if cert expires during work</div></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">03</span>Inadvertent energy restoration — data prevents it</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>The most preventable turnaround fatality</div>
+    <div class="ibox-body">Inadvertent energy restoration — a valve opened by mistake on a supposedly isolated line — is caused not by equipment failure but by <b>data failure</b>: incorrect isolation lists, unregistered energy points, work orders released without complete LOTO documentation.<br><br><b>Three data defences as Scope Coordinator:</b><br><br>1. <b>XVERWEIS cross-check:</b> Every P&ID valve tag cross-referenced against SAP PM Equipment Master. Any valve with no SAP record has no LOTO tag — it can be operated by anyone unaware that work is in progress nearby. My XVERWEIS validation catches every tag mismatch before execution starts.<br><br>2. <b>Field inconsistency detection:</b> Walk-downs catch equipment added since the last P&ID revision — like VT-101 on PL1AM1 and the MOV at KO1. These undocumented energy sources are the exact ones that cause incidents.<br><br>3. <b>Work order scope clarity:</b> SAP PM WOs must specify not only what IS done but what must NOT be done — which adjacent valves, switches, and connections are off-limits because neighbouring teams are working.</div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 5: PERMIT & PROCESS ═══ -->
+<div id="tab-permit" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>Permit to Work — types and coordinator role</div>
+  <div class="permit-grid">
+    <div class="pc">
+      <div class="pc-badge" style="background:var(--red-l);color:var(--red)">Hot Work Permit</div>
+      <div class="pc-name">Heißarbeitserlaubnis</div>
+      <div class="pc-desc">Required for any activity creating ignition sources: welding, grinding, cutting. Must include gas monitoring, fire watch, fire suppression on standby, and minimum exclusion zone from open hydrocarbons.</div>
+      <div class="pc-coord">Coordinator: verify no open equipment or nozzle within 10m — check P&ID for all open vents in area</div>
+    </div>
+    <div class="pc">
+      <div class="pc-badge" style="background:var(--blue-l);color:var(--blue)">Cold Work Permit</div>
+      <div class="pc-name">Kaltarbeitserlaubnis</div>
+      <div class="pc-desc">For mechanical and instrument work with no ignition sources. Still requires LOTO compliance and gas monitoring. Default permit for most turnaround mechanical work: seal replacement, bearing service, calibration.</div>
+      <div class="pc-coord">Coordinator: default permit for mechanical scope — verify LOTO complete before PTW issued</div>
+    </div>
+    <div class="pc">
+      <div class="pc-badge" style="background:var(--amber-l);color:var(--amber)">Confined Space Entry</div>
+      <div class="pc-name">Befahrerlaubnis</div>
+      <div class="pc-desc">Any work inside vessel, tank, column, or enclosed space. Requires gas-free certificate, standby person outside, rescue equipment pre-positioned, communication system established.</div>
+      <div class="pc-coord">Coordinator: gas-free cert must appear in SAP WO prerequisites — NO entry without confirmed cert</div>
+    </div>
+    <div class="pc">
+      <div class="pc-badge" style="background:var(--purple-l);color:var(--purple)">Electrical Isolation Permit</div>
+      <div class="pc-name">Elektrische Isolationserlaubnis</div>
+      <div class="pc-desc">Required for all electrical work: motor service, instrument loop break, sensor replacement. Separate from mechanical LOTO. Electrical team issues their own lock on the MCC.</div>
+      <div class="pc-coord">Coordinator: verify electrical work center assigned in SAP WO — separate lock required from Electrical</div>
+    </div>
+    <div class="pc">
+      <div class="pc-badge" style="background:var(--green-l);color:var(--green)">Excavation / Height Permit</div>
+      <div class="pc-name">Erdarbeiten / Höhenarbeiten</div>
+      <div class="pc-desc">Required for below-grade piping work or elevated work requiring scaffolding. Scaffolding requirements identified during field walk-down and added to SAP scope as prerequisite activity.</div>
+      <div class="pc-coord">Coordinator: identify scaffolding needs during P&ID walk-down — add to SAP before WO release</div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>SIMOPS — simultaneous operations risk management</div>
+  <div class="ibox">
+    <div class="ibox-title"><div class="ibox-stripe" style="background:var(--red)"></div>SIMOPS identification — the coordinator's data-driven check</div>
+    <div class="ibox-body">SIMOPS occurs when two or more different work activities happen simultaneously in the same area or on interconnected equipment. In a turnaround with hundreds of concurrent work orders, unmanaged SIMOPS creates the most severe safety conflicts — especially when one activity involves ignition sources and another involves opening equipment with residual hydrocarbons.<br><br><b>Classic SIMOPS example:</b> Hot Work (welding) on a flange 10 metres from where Electrical is opening a motor terminal box with residual hydrocarbon vapour. If the permit issuer does not know about both activities simultaneously, neither permit includes mitigations for the combined risk.<br><br><b>Coordinator's SAP PM SIMOPS check:</b> Review all work orders with overlapping time windows and adjacent Functional Locations. Any Hot Work order within 10m of an open-equipment order = SIMOPS flag to Lead Planner.</div>
+    <div class="ibox-cols">
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--red)">Highest risk SIMOPS</div><div class="ic-txt">Hot work + open hydrocarbon equipment<br>Vessel entry + pressurisation test<br>Electrical work + process line opening<br>Multiple crews — same equipment</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--amber)">SAP PM check method</div><div class="ic-txt">Overlapping WO time windows<br>Adjacent Functional Locations<br>Same equipment — different work centers<br>Group LOTO required flag</div></div>
+      <div class="ic-box"><div class="ic-lbl" style="color:var(--green)">Resolution options</div><div class="ic-txt">Time separation (sequential)<br>Physical barrier (fire blanket/wall)<br>Joint permit (combined risk assessment)<br>Escalation to Safety / HSE Manager</div></div>
+    </div>
+  </div>
+
+  <div class="sh"><span class="sh-num">03</span>Pre-restart permit closure — final safety gate</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Check</th><th>What I verify</th><th>SAP PM action</th><th>If incomplete</th></tr></thead>
+      <tbody>
+        <tr><td class="tt tt-r">TECO status</td><td>Every scope WO shows Technically Complete — physical work confirmed finished by work center</td><td>Filter SAP PM by scope area — all WOs must show TECO before restart authorisation</td><td>Open WO = work potentially unfinished — no restart until resolved or scope change documented</td></tr>
+        <tr><td class="tt tt-a">Isolation removal</td><td>All LOTO locks removed and logged out. Isolation-OUT list matches Isolation-IN list — every entry accounted for</td><td>WCM module — all Operational Items returned to normal state. Supervisor sign-off required</td><td>Single lock remaining = team still working or forgotten lock — plant cannot start until found</td></tr>
+        <tr><td class="tt tt-a">Permit closure</td><td>All Permits to Work formally closed and signed by both permit issuer and permit receiver</td><td>Open permits in PTW system — each must be closed before restart authorisation</td><td>Open permit = work formally still in progress — operations cannot assume plant is safe</td></tr>
+        <tr><td class="tt tt-g">Blind register</td><td>All spade and blind flanges inserted during TAR confirmed removed. Every blind tracked IN and OUT</td><td>Blind register cross-referenced against P&ID — zero blinds remaining in process lines</td><td>Forgotten blind in process line = no flow + damage or overpressure on start-up</td></tr>
+        <tr><td class="tt tt-b">Loop commissioning</td><td>All 3 components of every control loop confirmed tested: sensor calibrated, controller setpoint verified, final element stroked</td><td>SAP PM — all instrument WOs at TECO + calibration certificates filed</td><td>Half-commissioned loop = unstable control on restart = potential process upset</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 6: SAP PM BRIDGE ═══ -->
+<div id="tab-sap" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>SAP PM — the digital ledger of every bolt and pipe</div>
+  <div class="sap-grid">
+    <div class="sc"><div class="sc-term">Functional Location</div><div class="sc-real">The "Address" of the position</div><div class="sc-role">Permanent address in the plant — exists whether or not a physical machine is installed. Does not change even if the pump is replaced. Every P&ID tag must map to a FuncLoc. Any tag without a FuncLoc = safety data gap.</div></div>
+    <div class="sc"><div class="sc-term">Equipment Master</div><div class="sc-real">The "ID Card" of the machine</div><div class="sc-role">Serial number, manufacturer, installation date, full technical specs of the physical machine. Used to verify field reality matches SAP. A mismatch = data inconsistency. No Equipment Master entry = no LOTO tag possible.</div></div>
+    <div class="sc"><div class="sc-term">Maintenance Order (MO)</div><div class="sc-real">The "Work Authorisation"</div><div class="sc-role">Formal authorisation for work — allocates work center, assigns man-hours, attaches materials, carries cost budget. Work cannot officially start without an approved MO. Must include permit type and all safety prerequisites.</div></div>
+    <div class="sc"><div class="sc-term">Work Center</div><div class="sc-real">The "Team" doing the work</div><div class="sc-role">The discipline assigned — Mechanical, Electrical, Instrument, Civil. A control valve like YCZ requires two work centers. Coordinator verifies both are assigned and no work center overlap creates a SIMOPS conflict.</div></div>
+    <div class="sc"><div class="sc-term">Notification</div><div class="sc-real">The "Finding Report"</div><div class="sc-role">Report of a finding — describes a condition, defect, or requirement. Does not authorise work or allocate budget. Used when a field inconsistency requires Lead Planner review before scope decision. Converts to Work Order on approval.</div></div>
+    <div class="sc"><div class="sc-term">TECO Status</div><div class="sc-real">The "Technical Complete" flag</div><div class="sc-role">Technically Complete — physical work confirmed done. I cross-check every TECO order against the P&ID: did the team address all 3 loop components, or just the visible valve? Premature TECO on safety-critical item = immediate escalation.</div></div>
+  </div>
+
+  <div class="sh"><span class="sh-num">02</span>The P&ID-to-SAP data bridge — what the coordinator found</div>
+  <div class="bridge">
+    <div class="bs">
+      <div class="bs-lbl" style="color:var(--amber)">P&ID Rev.3 shows</div>
+      <div class="bs-item"><span>KO1 feed line</span> · Manual gate valve DN50</div>
+      <div class="bs-item"><span>PL1AM1 motor</span> · Standard coupling only</div>
+      <div class="bs-item"><span>YCZ tag</span> · Manual control valve</div>
+      <div class="bs-item"><span>FIR-02</span> · Flow indicator (no control)</div>
+      <div class="bs-item"><span>SB1 nozzle N3</span> · Capped and closed</div>
+    </div>
+    <div class="bridge-arr">⟷</div>
+    <div class="bs">
+      <div class="bs-lbl" style="color:var(--blue)">Field reality + SAP PM shows</div>
+      <div class="bs-item"><span>KO1 feed</span> · MOV with electrical actuator ⚠ HIGH</div>
+      <div class="bs-item"><span>PL1AM1</span> · VT-101 vibration sensor installed ⚠ HIGH</div>
+      <div class="bs-item"><span>YCZ</span> · Automated positioner installed ⚠ MED</div>
+      <div class="bs-item"><span>FIR-02</span> · FIC-02 active control loop ⚠ MED</div>
+      <div class="bs-item"><span>SB1 N3</span> · Active sampling line connected · LOW</div>
+    </div>
+  </div>
+  <div class="gap gap-green"><b>XVERWEIS result summary:</b> 5 data inconsistencies. HIGH: 2 (KO1 MOV +4h, PL1AM1 VT-101 +6h). MEDIUM: 2 (YCZ positioner +2h, FIR-02 controller +1.5h). LOW: 1 (SB1 N3 as-built). Total additional scope identified: +13.5h. All found BEFORE execution started. Zero surprises during shutdown.</div>
+
+  <div class="sh"><span class="sh-num">03</span>SAP WCM integration — P&ID to isolation system</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>P&ID component</th><th>SAP WCM object</th><th>Coordinator check</th><th>If mismatch found</th></tr></thead>
+      <tbody>
+        <tr><td>Manual valve (HV-101)</td><td>Operational Item</td><td>Verify tag number in field exactly matches SAP WCM record — character by character</td><td>Update SAP tag. Submit P&ID revision request if drawing is the source of the error.</td></tr>
+        <tr><td>Control valve (LV-102) with actuator</td><td>Lockout Requirement</td><td>Verify instrument air isolation also listed — not just the valve body mechanical isolation</td><td>Add pneumatic isolation to WCM Lockout Requirements. Notify Instrument team.</td></tr>
+        <tr><td>Blind / spade flange</td><td>Mechanical Isolation</td><td>Mark blind location on P&ID. Add to blind register. Verify IN/OUT status tracked daily.</td><td>If no blind register entry: add immediately — cannot restart with an untracked blind.</td></tr>
+        <tr><td>Dashed line to ESD</td><td>Operational Bypass / Loop Inhibit</td><td>Verify signal circuit listed in WCM. If ESD bypassed during work, formal bypass procedure required.</td><td>Missing ESD bypass procedure = uncontrolled safety trip risk during maintenance activities.</td></tr>
+        <tr><td>All KO1 scope items</td><td>Work Approval (WAP)</td><td>Confirm all KO1 MOs are linked to single KO1 isolation WAP — no work starts without WAP approval</td><td>MO without WAP link = work potentially starting before isolation confirmed complete.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 7: DAILY CHECKLIST ═══ -->
+<div id="tab-checklist" class="panel">
+
+  <div class="sh"><span class="sh-num">01</span>Daily coordinator execution checklist</div>
+  <div id="cl-root"></div>
+
+  <div class="sh"><span class="sh-num">02</span>Escalation thresholds — what goes to Lead Planner immediately</div>
+  <div class="tbl-wrap">
+    <table class="tbl">
+      <thead><tr><th>Finding</th><th>Escalation time</th><th>Exact communication</th><th>Documentation</th></tr></thead>
+      <tbody>
+        <tr><td class="tt tt-r">LOTO gap — missing energy source</td><td style="color:var(--red);font-weight:600">Within 15 min</td><td>"Energy source [tag] not in LOTO plan. Work in [area] cannot proceed until LOTO is updated. Recommended action: [specific]."</td><td>NCR or Safety Notification in SAP. Written same day. No verbal-only.</td></tr>
+        <tr><td class="tt tt-r">Invalid isolation point</td><td style="color:var(--red);font-weight:600">Immediately — stop work</td><td>"Isolation point [tag] is invalid — [reason]. Work in this area is stopped. Three options: [list]. Your decision is needed now."</td><td>Signed decision document. Options listed. Decision recorded with Lead Planner signature.</td></tr>
+        <tr><td class="tt tt-r">Safety-critical instrument missing from scope</td><td style="color:var(--red);font-weight:600">Same-day briefing</td><td>"PSV/SIF [tag] not in scope. Per BP process safety standards it must be tested. Est. +[X]h. Not adding creates process safety liability."</td><td>SAP Notification raised. Scope change recommendation in writing.</td></tr>
+        <tr><td class="tt tt-a">Data inconsistency (MED)</td><td style="color:var(--amber);font-weight:600">11:00 daily briefing</td><td>"Found [tag] inconsistency — [P&ID vs field]. Scope impact: +[X]h. Recommended action: [specific]. Awaiting approval."</td><td>Inconsistency log updated. RFI submitted if P&ID revision needed.</td></tr>
+        <tr><td class="tt tt-a">SIMOPS conflict identified</td><td style="color:var(--amber);font-weight:600">Before permit issuance</td><td>"WO [A] and WO [B] overlap at [time] in [area]. SIMOPS conflict. Options: time separation / barrier / joint permit. Decision before permit issued."</td><td>SAP PM schedule noted. Options documented. Decision in writing.</td></tr>
+        <tr><td class="tt tt-g">As-built documentation gap (LOW)</td><td style="color:var(--green)">End-of-week report</td><td>Documented in as-built register. No scope impact. Flagged for post-TAR P&ID revision request.</td><td>As-built register updated. RFI submitted post-turnaround.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+</div><!-- /main -->
+
+<div class="footer">
+  <span>Sazzad Khan | BI Analyst &nbsp;·&nbsp; Scopekoordinator Candidate &nbsp;·&nbsp; IMG Tec GmbH / BP Gelsenkirchen &nbsp;·&nbsp; 2026</span>
+  <span>Turnaround Scope Coordination Framework &nbsp;·&nbsp; P&ID · LOTO · Safety · Hazard · Energy · Permit · SAP PM</span>
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('on');});
+  document.querySelectorAll('.nb').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('tab-'+id).classList.add('on');
+  event.target.classList.add('on');
+  window.scrollTo({top:document.querySelector('.nav').offsetTop,behavior:'smooth'});
+}
+
+var clData=[
+  {title:'07:00 — Morning SAP PM data verification',color:'#c0392b',items:[
+    {en:'Open SAP PM equipment list for today scope area (KO1, SB1, PL1A, PL1B)',de:'SAP PM Geräteliste für heutigen Scope-Bereich öffnen'},
+    {en:'Run XVERWEIS cross-check: P&ID tag register vs SAP Equipment Master — flag missing entries',de:'XVERWEIS-Abgleich: P&ID-Tagregister vs SAP Equipment Master — fehlende Einträge markieren'},
+    {en:'Verify all active work orders have permit type field populated in SAP',de:'Alle aktiven Wartungsaufträge auf korrekt ausgefülltes Erlaubnistyp-Feld prüfen'},
+    {en:'Check new TECO orders — cross-reference against P&ID loop completeness (all 3 components?)',de:'Neue TECO-Aufträge prüfen — gegen P&ID-Regelkreisvollständigkeit abgleichen (alle 3 Komponenten?)'}
+  ]},
+  {title:'08:00 — P&ID control loop verification',color:'#b06a00',items:[
+    {en:'Open P&ID Rev.3 for scope area. Trace every control loop: sensor → controller → final element',de:'P&ID Rev.3 öffnen. Jeden Regelkreis verfolgen: Sensor → Regler → Stellglied'},
+    {en:'For each loop: confirm SAP PM has 3 separate Maintenance Orders — one per component',de:'Für jeden Regelkreis: prüfen ob SAP PM 3 separate Wartungsaufträge hat — einen pro Komponente'},
+    {en:'Verify all safety-critical instruments in scope (PSV, SIF, ESD, LSH, TSH)',de:'Alle sicherheitskritischen Instrumente im Scope prüfen (PSV, SIF, ESD, LSH, TSH)'},
+    {en:'Trace all dashed signal lines — flag any ESD-connected instrument as additional LOTO consideration',de:'Alle gestrichelten Signalleitungen verfolgen — ESD-verbundene Instrumente als LOTO-Punkt markieren'}
+  ]},
+  {title:'09:30 — Field walk-down (Vor-Ort-Begehung)',color:'#1a4e8a',items:[
+    {en:'Walk scope area with printed P&ID Rev.3 and SAP PM equipment list. Photograph every discrepancy.',de:'Scope-Bereich mit P&ID Rev.3 und SAP PM-Liste begehen. Jede Abweichung fotografieren.'},
+    {en:'3-way check each major item: P&ID shows vs SAP says vs physically installed in field',de:'Drei-Wege-Prüfung jedes Geräts: P&ID zeigt vs SAP sagt vs physisch installiert'},
+    {en:'Verify all LOTO isolation points accessible and operable — flag corroded or seized valves',de:'Alle LOTO-Isolationspunkte auf Zugänglichkeit und Bedienbarkeit prüfen — korrodierte Ventile melden'},
+    {en:'Check blind/spade register — confirm all physical blinds tracked IN and OUT accurately',de:'Blindflansch-Register prüfen — alle physischen Blindflansche Ein und Aus erfasst'},
+    {en:'Identify SIMOPS risk — activities in same area with conflicting permit types',de:'SIMOPS-Risiken identifizieren — Aktivitäten im gleichen Bereich mit konfliktierenden Erlaubnistypen'}
+  ]},
+  {title:'11:00 — Lead Planner daily briefing',color:'#4a3490',items:[
+    {en:'Present findings: Tag / Risk level / Schedule impact in hours / Recommended action — structured format only',de:'Befunde präsentieren: Tag / Risikolevel / Zeitaufwand / Empfohlene Aktion — nur strukturiertes Format'},
+    {en:'Escalate all HIGH-risk items immediately. MEDIUM items: present with solution, await approval.',de:'Alle HIGH-Risiko-Punkte sofort eskalieren. MEDIUM: mit Lösung präsentieren, Genehmigung abwarten.'},
+    {en:'Update SAP PM work orders after Lead Planner approval — same day, no backlog permitted',de:'SAP PM Wartungsaufträge nach Genehmigung aktualisieren — selber Tag, kein Rückstand'},
+    {en:'Raise Notifications or RFIs for any P&ID revision requirements found during walk-down',de:'Meldungen oder RFIs für erkannte P&ID-Revisionsanforderungen stellen'}
+  ]},
+  {title:'16:30 — End-of-day scope status report',color:'#1a6e4a',items:[
+    {en:'Update Master Scope List — reflect all approved changes in both SAP PM and Excel register',de:'Master Scope List aktualisieren — alle genehmigten Änderungen in SAP PM und Excel'},
+    {en:'Confirm all open inconsistencies have assigned owner and documented resolution deadline',de:'Bestätigen dass alle offenen Inkonsistenzen Verantwortlichen und Lösungsfrist haben'},
+    {en:'Send daily written report to Lead Planner inbox before 17:00 — no verbal-only updates',de:'Tagesbericht vor 17:00 Uhr an Lead Planer senden — schriftlich, keine mündlichen Updates'},
+    {en:'Document next-day field walk-down plan — which P&ID sections and equipment will be covered',de:'Plan für morgige Vor-Ort-Begehung dokumentieren — welche P&ID-Abschnitte abgedeckt werden'}
+  ]}
+];
+
+var state={};
+function buildCL(){
+  var root=document.getElementById('cl-root');
+  clData.forEach(function(sec,si){
+    var wrap=document.createElement('div');
+    wrap.className='cl-section';
+    var total=sec.items.length;
+    var head=document.createElement('div');
+    head.className='cls-head';
+    var dot=document.createElement('div');
+    dot.className='cls-dot';
+    dot.style.background=sec.color;
+    var ttl=document.createElement('div');
+    ttl.className='cls-title';
+    ttl.textContent=sec.title;
+    var bar=document.createElement('div');
+    bar.className='cls-bar';
+    var fill=document.createElement('div');
+    fill.className='cls-fill';
+    fill.id='fill-'+si;
+    fill.style.background=sec.color;
+    fill.style.width='0%';
+    bar.appendChild(fill);
+    var score=document.createElement('div');
+    score.className='cls-score';
+    score.id='score-'+si;
+    score.textContent='0/'+total;
+    head.appendChild(dot);head.appendChild(ttl);head.appendChild(bar);head.appendChild(score);
+    var list=document.createElement('div');
+    list.className='cl-list';
+    sec.items.forEach(function(item,ii){
+      var id=si+'_'+ii;
+      state[id]=false;
+      var row=document.createElement('div');
+      row.className='ci';
+      var box=document.createElement('div');
+      box.className='ci-box';
+      box.id='cb-'+id;
+      var txtwrap=document.createElement('div');
+      var en=document.createElement('div');
+      en.className='ci-en';
+      en.id='ce-'+id;
+      en.textContent=item.en;
+      var de=document.createElement('div');
+      de.className='ci-de';
+      de.textContent=item.de;
+      txtwrap.appendChild(en);txtwrap.appendChild(de);
+      row.appendChild(box);row.appendChild(txtwrap);
+      (function(rid,rsec,rtot){
+        row.onclick=function(){
+          state[rid]=!state[rid];
+          var b=document.getElementById('cb-'+rid);
+          var e=document.getElementById('ce-'+rid);
+          b.classList.toggle('done',state[rid]);
+          b.textContent=state[rid]?'✓':'';
+          e.classList.toggle('done',state[rid]);
+          var done=0;
+          for(var k in state){if(k.startsWith(rsec+'_')&&state[k])done++;}
+          document.getElementById('score-'+rsec).textContent=done+'/'+rtot;
+          document.getElementById('fill-'+rsec).style.width=Math.round(done/rtot*100)+'%';
+        };
+      })(id,si,total);
+      list.appendChild(row);
+    });
+    wrap.appendChild(head);wrap.appendChild(list);
+    root.appendChild(wrap);
+  });
+}
+window.addEventListener('DOMContentLoaded',buildCL);
+</script>
+</body>
+</html>
